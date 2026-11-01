@@ -1,0 +1,7 @@
+/.env
+/bin/
+/admin/node_modules/
+/admin/dist/
+/coverage.out
+/storage/*
+!/storage/.gitignore
