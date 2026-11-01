@@ -10,6 +10,7 @@ export default defineConfig({
   plugins: [vue()],
   define: { 'import.meta.env.VITE_ADMIN_PREFIX': JSON.stringify(adminPrefix) },
   publicDir: '../public',
+  optimizeDeps: { exclude: ['@dawnim/admin'] },
   resolve: { dedupe: ['vue', 'vue-router', 'pinia', 'element-plus', 'vue-i18n'] },
   server: {
     host: '127.0.0.1',

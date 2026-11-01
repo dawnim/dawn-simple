@@ -8,6 +8,8 @@
 
 切换分支后执行`go mod download`和`pnpm --dir admin install --frozen-lockfile`，避免沿用另一分支的前端依赖。业务变更单独提交，本地依赖配置不合入main。
 
+dev启动前先在独立终端执行`pnpm --dir admin dev:lib`，监听构建相邻前端库；再启动`dawn:start local`。本地Go模块通过go.mod的replace生效，npm依赖通过link引用本机dist。main不包含这些本地路径。
+
 ## 准备
 
 使用已发布的`dawn-server v0.1.0`与`@dawnim/admin 0.1.0`，直接安装项目依赖：
