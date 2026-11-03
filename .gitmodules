@@ -1,0 +1,3 @@
+[submodule "docs/prismgo"]
+	path = docs/prismgo
+	url = https://github.com/prismgo/docs.git
