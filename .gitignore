@@ -1,0 +1,11 @@
+/.env
+/bin/
+/admin/node_modules/
+/admin/dist/
+/docs/node_modules/
+/docs/.vitepress/dist/
+/docs/.vitepress/cache/
+/coverage.out
+/storage/*
+!/storage/.gitignore
+/public/storage
