@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" aria-hidden="true">
+  <path fill="#409eff" fill-rule="evenodd" d="M54 44h70c48 0 82 34 82 84s-34 84-82 84H54V44Zm42 35v98h25c28 0 47-19 47-49s-19-49-47-49H96Z"/>
+  <path fill="var(--admin-logo-sun, #ffb84d)" d="M101 145c0-14.9 12.1-27 27-27s27 12.1 27 27h-54Z"/>
+</svg>

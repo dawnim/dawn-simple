@@ -1,15 +1,66 @@
-import { readFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { dirname, posix, resolve } from 'node:path'
 import { slug } from 'github-slugger'
 import { defineConfig, type DefaultTheme } from 'vitepress'
 import { withMermaid } from 'vitepress-plugin-mermaid'
 
-const prismgoSidebar: DefaultTheme.SidebarItem[] = []
-const prismgoIndex = readFileSync(new URL('../prismgo/README.md', import.meta.url), 'utf8')
-for (const [, section, text, link] of prismgoIndex.matchAll(
-  /^## (.+)$|^- \[([^\]]+)\]\((zh_CN\/[^)]+\.md)\)$/gm
-)) {
-  if (section) prismgoSidebar.push({ text: section, items: [] })
-  else prismgoSidebar.at(-1)!.items!.push({ text, link: `/prismgo/${link.slice(0, -3)}` })
+const localSite = process.env.DAWN_DOCS_SITE === '1'
+const base = localSite ? '/docs/' : '/dawn-simple/'
+
+// Both languages share the same route suffix, so VitePress switches the current article.
+function rewrite(path: string) {
+  return path
+    .replace(/^prismgo\/README_en\.md$/, 'en/prismgo/index.md')
+    .replace(/^prismgo\/README\.md$/, 'prismgo/index.md')
+    .replace(/^prismgo\/en\//, 'en/prismgo/')
+    .replace(/^prismgo\/zh_CN\//, 'prismgo/')
+}
+
+// README是唯一目录来源，官网与GitHub Pages共用同一份导航。
+function sidebar(file: string): DefaultTheme.SidebarItem[] {
+  const items: DefaultTheme.SidebarItem[] = []
+  const index = readFileSync(new URL(`../${file}`, import.meta.url), 'utf8')
+  for (const [, section, label, link] of index.matchAll(
+    /^## (.+)$|^(?:-|\|) \[([^\]]+)\]\(([^)]+\.md)\)/gm
+  )) {
+    if (section) items.push({ text: section, items: [] })
+    else items.at(-1)!.items!.push({ text: label, link: `/${rewrite(posix.join(posix.dirname(file), link)).slice(0, -3)}` })
+  }
+  return items
+}
+
+function navigation(english = false): DefaultTheme.Config {
+  const prefix = english ? '/en' : ''
+  const text = (zh: string, en: string) => english ? en : zh
+  const page = (zh: string, en: string, path: string) => ({ text: text(zh, en), link: `${prefix}/${path}` })
+  return {
+    siteTitle: text('Dawn 文档', 'Dawn Docs'),
+    nav: [page('开发文档', 'Documentation', 'quickstart'), page('PrismGo', 'PrismGo', 'prismgo/'), {
+      text: text('最佳实践', 'Example application'), link: 'https://github.com/dawnim/dawn-simple'
+    }],
+    sidebar: {
+      [`${prefix}/prismgo/`]: [page('PrismGo 文档', 'PrismGo Docs', 'prismgo/'), ...sidebar(`prismgo/${english ? 'README_en' : 'README'}.md`), page('Dawn 文档', 'Dawn Docs', 'README')],
+      [`${prefix}/`]: [
+        page('文档导航', 'Documentation', 'README'),
+        ...sidebar(`${english ? 'en/' : ''}README.md`)
+      ]
+    },
+    editLink: {
+      text: text('查看源文件', 'View source'),
+      pattern: ({ filePath }) => filePath.startsWith('prismgo/')
+        ? `https://github.com/prismgo/docs/blob/main/${filePath.slice(8)}`
+        : `https://github.com/dawnim/dawn-simple/blob/main/docs/${filePath}`
+    },
+    outline: { level: [2, 3], label: text('本页目录', 'On this page') },
+    docFooter: { prev: text('上一篇', 'Previous page'), next: text('下一篇', 'Next page') },
+    sidebarMenuLabel: text('菜单', 'Menu'), returnToTopLabel: text('返回顶部', 'Return to top'), skipToContentLabel: text('跳转至正文', 'Skip to content'),
+    darkModeSwitchLabel: text('切换主题', 'Appearance'), lightModeSwitchTitle: text('切换至亮色', 'Switch to light theme'), darkModeSwitchTitle: text('切换至暗色', 'Switch to dark theme'),
+    langMenuLabel: text('切换语言', 'Change language'),
+    footer: {
+      message: `<a href="https://github.com/dawnim/dawn-simple/blob/main/LICENSE">MIT License</a> · <a href="https://github.com/dawnim/dawn-simple#鸣谢">${text('鸣谢', 'Acknowledgements')}</a>`,
+      copyright: 'Copyright © 2026 dawnim'
+    }
+  }
 }
 
 export default withMermaid(
@@ -17,14 +68,28 @@ export default withMermaid(
     lang: 'zh-CN',
     title: 'Dawn',
     description: '像写 Laravel 一样，轻松构建 Go 管理系统',
-    base: '/dawn-simple/',
+    base,
+    rewrites: rewrite,
+    locales: {
+      root: { label: '简体中文', lang: 'zh-CN', themeConfig: navigation() },
+      en: { label: 'English', lang: 'en', description: 'Build Go admin applications with the simplicity of Laravel', themeConfig: navigation(true) }
+    },
+    // Keep published PrismGo links working without changing its submodule sources.
+    buildEnd(config) {
+      for (const [source, target] of Object.entries(config.rewrites.map)) {
+        const path = resolve(config.outDir, source.replace(/\.md$/, '.html'))
+        const href = `${base}${target.replace(/(?:index)?\.md$/, target.endsWith('index.md') ? '' : '.html')}`
+        mkdirSync(dirname(path), { recursive: true })
+        writeFileSync(path, `<!doctype html><meta charset="utf-8"><title>Dawn</title><a href="${href}">Continue</a><script>location.replace(${JSON.stringify(href)}+location.search+location.hash)</script>`)
+      }
+    },
     head: [
       [
         'link',
         {
           rel: 'icon',
           type: 'image/svg+xml',
-          href: '/dawn-simple/logo.svg'
+          href: `${base}logo.svg`
         }
       ]
     ],
@@ -42,83 +107,25 @@ export default withMermaid(
           const html = fence(...args)
           return args[0][args[1]].info.trim() === 'mermaid' ? `<Diagram>${html}</Diagram>` : html
         }
-        md.core.ruler.after('inline', 'prismgo-links', state => {
-          if (!state.env.relativePath.startsWith('prismgo/')) return
-          const locale = state.env.relativePath.startsWith('prismgo/en/') ? 'en' : 'zh_CN'
-          for (const token of state.tokens.flatMap(token => token.children || [])) {
+        md.core.ruler.after('inline', 'prismgo-links', (state) => {
+          const source = posix.relative(state.env.srcDir || new URL('..', import.meta.url).pathname, state.env.realPath || state.env.path)
+          if (!source.startsWith('prismgo/')) return
+          const english = state.env.relativePath.startsWith('en/')
+          for (const token of state.tokens.flatMap((token) => token.children || [])) {
             if (token.type !== 'link_open') continue
             const href = decodeURI(token.attrGet('href')!)
-            if (!href.startsWith('/docs/')) continue
-            const path = href
-              .replace(/^\/docs\/(?:(?:\{\{version\}\}|zh_CN|en)\/)?/, '')
-              .replace(/^providers(?=[.#/]|$)/, 'service-provider')
-            token.attrSet('href', `/prismgo/${locale}/${path}`)
+            if (/^(?:[a-z]+:|#|\/\/)/i.test(href)) continue
+            const path = href.startsWith('/docs/')
+              ? `prismgo/${english ? 'en' : 'zh_CN'}/${href.replace(/^\/docs\/(?:(?:\{\{version\}\}|zh_CN|en)\/)?/, '').replace(/^providers(?=[.#/]|$)/, 'service-provider')}`
+              : posix.resolve('/', posix.dirname(source), href).slice(1)
+            token.attrSet('href', `/${rewrite(path)}`)
           }
         })
       }
     },
     themeConfig: {
       logo: '/logo.svg',
-      siteTitle: 'Dawn 文档',
-      nav: [
-        { text: '开发文档', link: '/quickstart' },
-        { text: 'PrismGo', link: '/prismgo/README' },
-        {
-          text: '最佳实践',
-          link: 'https://github.com/dawnim/dawn-simple'
-        }
-      ],
-      sidebar: {
-        '/prismgo/': [
-          { text: 'PrismGo 文档', link: '/prismgo/README' },
-          ...prismgoSidebar,
-          { text: 'Dawn 文档', link: '/README' }
-        ],
-        '/': [
-          { text: '文档导航', link: '/README' },
-          {
-            text: '入门',
-            items: [
-              { text: '快速开始', link: '/quickstart' },
-              { text: '创建空白项目', link: '/create-project' },
-              { text: '架构与目录', link: '/architecture' }
-            ]
-          },
-          {
-            text: '业务开发',
-            items: [
-              { text: '后端开发', link: '/backend' },
-              { text: '前端开发', link: '/frontend' },
-              { text: '权限与数据范围', link: '/authorization' },
-              { text: '配置', link: '/configuration' },
-              { text: '聊天与实时通信', link: '/chat' }
-            ]
-          },
-          {
-            text: '运行与交付',
-            items: [
-              { text: '服务运行', link: '/runtime' },
-              { text: '测试与发布', link: '/testing' },
-              { text: '开发工具', link: '/lens' }
-            ]
-          }
-        ]
-      },
-      editLink: {
-        text: '查看源文件',
-        pattern: ({ filePath }) =>
-          filePath.startsWith('prismgo/')
-            ? `https://github.com/prismgo/docs/blob/main/${filePath.slice(8)}`
-            : `https://github.com/dawnim/dawn-simple/blob/main/docs/${filePath}`
-      },
-      outline: { level: [2, 3], label: '本页目录' },
-      docFooter: { prev: '上一篇', next: '下一篇' },
-      sidebarMenuLabel: '菜单',
-      returnToTopLabel: '返回顶部',
-      skipToContentLabel: '跳转至正文',
-      darkModeSwitchLabel: '切换主题',
-      lightModeSwitchTitle: '切换至亮色',
-      darkModeSwitchTitle: '切换至暗色',
+      ...(localSite ? { logoLink: { link: '/', target: '_self' } } : {}),
       socialLinks: [
         {
           icon: 'github',
@@ -136,8 +143,8 @@ export default withMermaid(
                     granularity: 'word'
                   }).segment(text)
                 )
-                  .filter(part => part.isWordLike)
-                  .map(part => part.segment)
+                  .filter((part) => part.isWordLike)
+                  .map((part) => part.segment)
               }
             }
           },
@@ -153,21 +160,12 @@ export default withMermaid(
                   resetButtonTitle: '清除搜索',
                   backButtonTitle: '关闭搜索',
                   noResultsText: '没有找到相关内容',
-                  footer: {
-                    selectText: '选择',
-                    navigateText: '切换',
-                    closeText: '关闭'
-                  }
+                  footer: { selectText: '选择', navigateText: '切换', closeText: '关闭' }
                 }
               }
             }
           }
         }
-      },
-      footer: {
-        message:
-          '<a href="https://github.com/dawnim/dawn-simple/blob/main/LICENSE">MIT License</a> · <a href="https://github.com/dawnim/dawn-simple#鸣谢">鸣谢</a>',
-        copyright: 'Copyright © 2026 dawnim'
       }
     }
   })

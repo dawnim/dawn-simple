@@ -99,7 +99,7 @@ o.Settings = append(o.Settings, sdk.SettingDefinition{
 
 管理页删除要求 `dawn.cache.delete` 权限，且 Key 属于当前应用、环境与已注册定义；删除权限独立于 `Clearable`。编辑需要 `dawn.cache.update`，保存时保留原 TTL。hash 按游标读取，单字段更新。
 
-系统配置每组使用独立 Redis Hash，字段保留 JSON 类型，`__revision` 防止并发旧值回写。验证码、会话、锁等基础设施 Key 默认关闭查看、编辑与顶栏批量清理。
+系统配置统一复用`ForeverSettings`，每组使用独立 Redis Hash，字段保留 JSON 类型，`__revision` 防止并发旧值回写；同一配置不另建缓存副本。以`__`开头的内部配置组仅供服务端读取，不参与后台查看、编辑、删除或批量清理。验证码、会话、锁等基础设施 Key 默认关闭查看、编辑与顶栏批量清理。
 
 ## 日志与监控
 
@@ -115,6 +115,6 @@ o.Settings = append(o.Settings, sdk.SettingDefinition{
 
 SMTP 支持 STARTTLS 和 SSL/TLS，默认 UTF-8。测试邮件使用当前配置，结果写入邮件日志。
 
-IP 地理位置使用本地 GeoLite2 City 库。`dawn:install` 下载到 `storage/app/geoip/GeoLite2-City.mmdb`，cron 每日 03:30 更新；也可运行 `go run . dawn:geoip`。文件校验后原子替换，失败保留现有库，HTTP 自动重载。
+IP地理位置结合ip2region的IPv4/IPv6与GeoLite2 City、Country、ASN五类离线文件。`dawn:install`准备数据，cron每日03:30更新；也可运行`go run . dawn:geoip`。文件校验后原子替换，失败保留现有库，长期进程自动重载。
 
-`GEOIP_PATH` 指定路径，`GEOIP_URL` 指定 HTTPS 下载源，`GEOIP_ENABLED=false` 关闭下载与查询。各主机使用独立本地库时分别安排更新，数据来源与许可见 [README 鸣谢](https://github.com/dawnim/dawn-simple#鸣谢)。
+使用`GEOIP_DIRECTORY`、`GEOIP_*_URL`与`GEOIP_ENABLED`配置。保存目录、下载源及公开接口见[IP地域查询与更新](geoip.md)。各主机使用独立本地库时分别安排更新，数据来源与许可见[README鸣谢](https://github.com/dawnim/dawn-simple#鸣谢)。

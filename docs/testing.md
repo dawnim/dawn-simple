@@ -48,19 +48,16 @@ DAWN_TEST_DRIVER=pgsql DAWN_TEST_DSN='专用测试库DSN' \
 
 ## 框架联调
 
-`dawn-server`、`dawn-admin`、`dawn-simple` 放在同级目录。dawn-simple 的 `main` 使用发布依赖，`dev` 通过 Go `replace` 和 npm `link` 引用相邻框架仓库。
-
-在 dawn-simple 执行：
+`dawn-server`、`dawn-admin`、`dawn-simple`放在同级目录。`main`使用已发布的Go模块和npm包；`dev`通过Go `replace`和npm `link`引用相邻框架源码。切换到`dev`后，确认相邻仓库包含要联调的源码，再安装依赖：
 
 ```sh
 git switch dev
 go mod download
 pnpm --dir ../dawn-admin install --frozen-lockfile
 pnpm --dir admin install --frozen-lockfile
-pnpm --dir admin dev:lib
 ```
 
-保持前端库监听构建，另开终端运行 `go run . dawn:start local`。切换分支后重新安装对应依赖；框架发布后回到 main，升级版本与锁文件，再验证业务工程。
+在`dev`运行`pnpm --dir admin dev:lib`监听前端库构建，另开终端运行`go run . dawn:start local`。Go源码由`replace`或显式启用的`go.work`决定，不能仅凭分支名判断；即使在`main`，启用本地`go.work`也会加载相邻`dawn-server`源码。前端由`admin/package.json`中的`link:`决定，未链接时仍使用发布包。用`go env GOWORK`和`realpath admin/node_modules/@dawnim/admin`确认实际依赖来源。发布构建使用`main`，关闭本地`go.work`并安装锁定的发布依赖。
 
 ## 运行验收
 
@@ -82,7 +79,13 @@ pnpm --dir docs install --frozen-lockfile
 pnpm --dir docs dev
 ```
 
-构建使用 `pnpm --dir docs build`，本地预览使用 `pnpm --dir docs preview`，产物位于 `docs/.vitepress/dist`。
+构建使用 `pnpm --dir docs build`，本地预览使用 `pnpm --dir docs preview`，产物位于 `docs/.vitepress/dist`。官网使用`pnpm --dir docs build:site`，产物位于`public/docs`，资源路径为`/docs/`。
+
+文档更新后执行`pnpm --dir docs build:all`，一次更新两套产物。官网与GitHub Pages共用`docs/.vitepress/config.mts`，Dawn侧栏和上下篇直接从[中文目录](README.md)与[英文目录](en/README.md)生成；新增、删除或改名教程时同步更新两个目录，无需另外维护菜单。PrismGo目录从子模块的中英文README读取。GitHub Actions也执行两套构建检查，发布时只上传Pages产物；官网部署使用`public/docs`。
+
+Dawn英文文档放在`docs/en`，与中文保持相同文件名，修改教程时同步维护两种语言。导航、搜索及上下篇使用VitePress语言配置；官网与文档共用语言偏好，见[官网语言同步](frontend.md#官网语言同步)。两种构建均检查内部页面链接。
+
+GitHub Pages 使用`/dawn-simple/`路径发布静态文档，语言菜单可在中英文页面间切换并记住选择。浏览器按域名隔离语言偏好，因此 Pages 与官网分别保存各自的语言设置。
 
 PrismGo 文档通过 `docs/prismgo` 子模块连接官方仓库，构建时读取上游最新内容。本地更新执行 `git submodule update --remote docs/prismgo`。
 

@@ -8,4 +8,9 @@ import (
 
 func init() { database.RegisterSeeder(Seed) }
 
-func Seed(db *gorm.DB) error { return sdk.Seed(db) }
+func Seed(db *gorm.DB) error {
+	if err := sdk.Seed(db); err != nil {
+		return err
+	}
+	return seedSupport(db)
+}

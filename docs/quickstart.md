@@ -14,14 +14,19 @@
 ## 获取项目
 
 ```sh
-git clone https://github.com/dawnim/dawn-simple.git
-cd dawn-simple
-go mod download
-pnpm --dir admin install --frozen-lockfile
+git clone https://github.com/dawnim/dawn-simple.git my-app
+cd my-app
 cp .env.example .env
+go mod download
+go run . dawn:rename example.com/my-app
+pnpm --dir admin install --frozen-lockfile
 ```
 
+将`my-app`和`example.com/my-app`换成自己的目录名与Go模块路径。`dawn:rename`由server扩展提供，以模块路径最后一段作为项目名，更新`go.mod`、Go源码导入、`config/dawn.go`、应用默认名、前端包名、Supervisor示例，以及`.env.example`和已存在`.env`中的应用名与原项目缓存、会话、队列前缀。数据库连接和密钥保持原值，目录名在克隆时指定。此命令在首次安装前执行，无需先配置数据库或Redis。
+
 `main` 使用已发布的框架依赖；参与框架开发时使用 `dev`，见[框架联调](testing.md#框架联调)。
+
+`dev`通过Go `replace`和npm `link`引用相邻框架源码；本地`go.work`也可能覆盖Go依赖来源。
 
 从基础应用独立接入框架，见[创建空白项目](create-project.md)。
 
@@ -70,4 +75,4 @@ go run . dawn:start local
 
 后台管理业务接口放在 `app/admin`，页面放在 `admin/src`。先阅读[架构与目录](architecture.md)，再按[后端开发](backend.md)和[前端开发](frontend.md)添加功能。
 
-创建自己的项目时，修改 `go.mod` 模块名、源码导入、`config/dawn.go` 中的 `module` 和前端包名。框架能力通过 Go Module 与 npm 包升级。部署方式见[服务运行](runtime.md)。
+项目命名由前面的`dawn:rename`统一完成。框架能力通过Go Module与npm包升级。部署方式见[服务运行](runtime.md)。

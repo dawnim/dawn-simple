@@ -82,7 +82,7 @@ func init() {
 					"queue":       Env("REDIS_QUEUE", constants.QueueDefault),
 					"prefix":      Env("REDIS_QUEUE_PREFIX", prefix+":queue"),
 					"connection":  Env("REDIS_QUEUE_CONNECTION", "default"),
-					"retry_after": Env("REDIS_QUEUE_RETRY_AFTER", 90),
+					"retry_after": Env("REDIS_QUEUE_RETRY_AFTER", 21660),
 					"block_for":   Env("REDIS_QUEUE_BLOCK_FOR", 0),
 				},
 				"rabbitmq": map[string]interface{}{

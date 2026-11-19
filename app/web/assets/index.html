@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="zh-CN" data-page="moments">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <meta name="referrer" content="strict-origin-when-cross-origin" />
+        <title>Dawn</title>
+        <link rel="icon" type="image/svg+xml" href="/site-assets/logo.svg" />
+        <link rel="stylesheet" href="/site-assets/site.css" />
+        <link rel="stylesheet" href="/site-assets/moment-markdown.css" />
+        <script src="/support-assets/widget.js" defer></script>
+        <script src="/site-assets/spark-md5.min.js" defer></script>
+        <script src="/site-assets/moment-markdown.js" defer></script>
+        <script src="/site-assets/site.js" defer></script>
+    </head>
+    <body>
+        <iframe id="documentation" title="Dawn 文档" hidden></iframe>
+        <button id="moment-ai" class="moment-ai" type="button" data-t="AI写动态" hidden></button>
+        <aside id="community-chat" class="community-chat" hidden aria-label="聊天">
+            <header><strong data-t="聊天"></strong><button id="chat-close" type="button" data-title="关闭">×</button></header>
+            <div class="chat-layout"><div id="chat-list" class="chat-list"></div><div class="chat-main"><div id="chat-title"></div><div id="chat-messages" class="chat-messages"></div><form id="chat-form"><input id="chat-input" maxlength="4000" data-placeholder="输入消息" required><button id="chat-send" class="primary" data-t="发送"></button></form></div></div>
+            <p id="chat-error" role="alert"></p>
+        </aside>
+        <header class="site-header"><nav>
+            <a class="brand" href="/" aria-label="Dawn"
+                ><img
+                    class="logo"
+                    src="/site-assets/logo.svg"
+                    alt=""
+                    width="36"
+                    height="36"
+                />Dawn</a
+            >
+            <form id="forum-search" class="forum-search" role="search"><span data-icon="search"></span><input id="forum-query" type="search" maxlength="100" data-placeholder="搜索主题和内容"><button type="submit" data-t="搜索"></button></form>
+            <div class="nav-actions">
+                <a id="nav-dawn" href="/dawn" data-t="黎明"></a>
+                <button id="nav-chat" class="theme-toggle" type="button" data-title="聊天"><span data-icon="chat"></span><span id="nav-chat-unread" class="chat-unread" hidden></span></button>
+                <select id="language" aria-label="语言 / Language"><option value="zh">简体中文</option><option value="en">English</option></select
+                ><button id="theme" type="button" class="theme-toggle"></button
+                ><button id="account" type="button" data-t="登录"></button
+                ><button
+                    id="logout"
+                    type="button"
+                    hidden
+                    class="theme-toggle"
+                    data-title="退出登录"
+                ><span data-icon="logout"></span></button>
+            </div>
+        </nav></header>
+        <main>
+            <section class="hero">
+                <p class="eyebrow">GO · VUE · AI</p>
+                <h1 data-t="从想法到产品，简单一点"></h1>
+                <p
+                    class="intro"
+                    data-t="开放的CMS框架，让管理、实时通信与AI客服自然融入你的业务"
+                ></p>
+                <div class="hero-actions">
+                    <a
+                        class="primary"
+                        href="/docs/quickstart.html"
+                        data-t="开始构建"
+                    ></a
+                    ><button
+                        id="support"
+                        class="secondary"
+                        type="button"
+                        data-t="体验在线客服"
+                    ></button>
+                </div>
+                <p
+                    class="caption"
+                    data-t="一套清晰的扩展能力，连接你的网站和用户"
+                ></p>
+            </section>
+            <section class="features">
+                <article>
+                    <span>01</span>
+                    <h2 data-t="专注你的业务"></h2>
+                    <p
+                        data-t="用户、权限、文件与实时通信已经就绪，按需扩展，无需修改框架源码"
+                    ></p>
+                </article>
+                <article>
+                    <span>02</span>
+                    <h2 data-t="让知识参与服务"></h2>
+                    <p
+                        data-t="文档与业务工具共同支持AI回答，适用条件、身份验证和引用都有清晰边界"
+                    ></p>
+                </article>
+                <article>
+                    <span>03</span>
+                    <h2 data-t="随时转交给人"></h2>
+                    <p
+                        data-t="从网站悬浮入口到Telegram，把AI与人工接待放进同一个会话流程"
+                    ></p>
+                </article>
+            </section>
+            <section class="docs">
+                <div>
+                    <h2 data-t="从文档开始，也可以直接聊聊"></h2>
+                    <p
+                        data-t="客服演示使用Dawn与PrismGo文档，支持AI接待和转人工"
+                    ></p>
+                </div>
+                <div class="doc-links">
+                    <a href="/docs/README.html">Dawn ↗</a>
+                    <a href="/docs/prismgo/README.html">PrismGo ↗</a>
+                </div>
+            </section>
+        </main>
+        <section id="moments" class="moments" hidden>
+            <aside class="forum-sidebar">
+                <a class="forum-home" href="/"><span data-icon="home"></span><span data-t="社区首页"></span></a>
+                <button class="sidebar-chat" type="button" data-open-chat><span data-icon="chat"></span><span data-t="聊天大厅"></span></button>
+                <p class="sidebar-caption" data-t="交流板块"></p>
+                <div id="forum-boards" class="forum-boards"></div>
+                <div class="sidebar-bottom"><span class="live-dot"></span><span data-t="灵感在这里相遇"></span></div>
+            </aside>
+            <div class="forum-main">
+                <header class="forum-heading"><div><h1 id="forum-title" data-t="网友动态"></h1><p data-t="分享此刻，发现有趣的人和事"></p></div><button id="moment-compose" class="primary" type="button"><span data-icon="plus"></span><span data-t="发布动态"></span></button></header>
+                <div id="forum-tabs" class="forum-tabs" role="tablist"></div>
+                <p id="moment-error" role="alert"></p>
+                <div id="moment-list" class="moment-list"></div>
+                <div id="moment-pages" class="moment-pages"></div>
+            </div>
+            <aside class="forum-right">
+                <section class="forum-widget profile-widget">
+                    <div class="community-profile"><span id="community-avatar">D</span><div><strong id="community-name"></strong><p id="community-id"></p><small id="community-region"></small></div></div>
+                    <p class="profile-caption" data-t="让每一个想法，都有回响"></p>
+                </section>
+                <section class="forum-widget"><h2><span data-icon="spark"></span><span data-t="社区公约"></span></h2><p class="widget-text" data-t="分享经验，认真提问，友善交流。鲜花送给灵感，鸡蛋留给玩笑"></p><a class="widget-link" href="/dawn"><span data-t="认识黎明"></span><span>↗</span></a></section>
+                <section class="forum-widget"><h2><span data-icon="fire"></span><span data-t="本周热议"></span></h2><div id="forum-hot" class="forum-hot"></div></section>
+                <section class="forum-widget"><h2><span data-icon="people"></span><span data-t="社区足迹"></span></h2><div class="forum-stats"><div><strong id="stat-posts">—</strong><span data-t="主题"></span></div><div><strong id="stat-replies">—</strong><span data-t="回复"></span></div><div><strong id="stat-members">—</strong><span data-t="成员"></span></div></div></section>
+                <p class="community-footer">Dawn Community · <a href="https://github.com/dawnim/dawn-simple" target="_blank" rel="noopener">GitHub ↗</a></p>
+            </aside>
+        </section>
+        <dialog id="moment-dialog" class="compose-dialog">
+            <form id="moment-form">
+                <div class="dialog-head"><h2 data-t="发布动态"></h2><button type="button" id="moment-close" data-title="关闭"><span data-icon="close"></span></button></div>
+                <div id="moment-format" class="compose-format" role="tablist"><button id="format-moment" type="button" class="active" data-t="动态"></button><button id="format-post" type="button" data-t="帖子"></button></div>
+                <div class="compose-row"><label><span data-t="交流板块"></span><select id="moment-board"></select></label><label id="moment-title-field" class="compose-title" hidden><span data-t="标题"></span><input id="moment-title" maxlength="100" data-placeholder="给你的想法起个标题"></label></div>
+                <div id="moment-editor-shell" class="compose-editor-shell">
+                    <div id="moment-editor-tabs" class="editor-head"><div class="editor-tabs"><button type="button" class="active" data-editor-view="write" data-t="正文"></button><button type="button" data-editor-view="live" data-t="实时预览"></button><button type="button" data-editor-view="preview" data-t="预览"></button></div><span id="moment-length">0 / 1024</span><button id="moment-fullscreen" class="editor-icon" type="button" data-title="进入全屏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3H5a2 2 0 0 0-2 2v4M15 3h4a2 2 0 0 1 2 2v4M9 21H5a2 2 0 0 1-2-2v-4M15 21h4a2 2 0 0 0 2-2v-4"/></svg></button></div>
+                    <div id="moment-editor" class="compose-editor"><div id="moment-lines" class="editor-lines" aria-hidden="true"></div><textarea id="moment-content" maxlength="1024" required rows="6" data-placeholder="分享你的想法"></textarea><div id="moment-preview" class="markdown-body markdown-preview" hidden></div><div id="editor-selection-bar" class="editor-selection-bar" hidden><button type="button" data-editor-command="bold"><b>B</b></button><button type="button" data-editor-command="italic"><i>I</i></button><button type="button" data-editor-command="underline"><u>U</u></button><button type="button" data-editor-command="highlight">H</button><button type="button" data-editor-command="code" data-value="inline">&lt;/&gt;</button></div><div id="editor-mention-panel" class="editor-mention-panel" hidden></div></div>
+                    <div id="moment-toolbar" class="editor-toolbar">
+                        <div class="editor-tool-dropdown"><button type="button" class="editor-tool" data-editor-menu="heading" data-title="标题层级"><span class="editor-heading-label">H1</span><i>⌄</i></button><div class="editor-menu" data-editor-menu-panel="heading"><button type="button" data-editor-command="heading" data-value="1">H1 <span data-t="一级标题"></span></button><button type="button" data-editor-command="heading" data-value="2">H2 <span data-t="二级标题"></span></button><button type="button" data-editor-command="heading" data-value="3">H3 <span data-t="三级标题"></span></button></div></div>
+                        <button type="button" class="editor-tool" data-editor-command="bold" data-title="加粗"><b>B</b></button>
+                        <button type="button" class="editor-tool" data-editor-command="underline" data-title="下划线"><span data-icon="underline"></span></button>
+                        <button type="button" class="editor-tool" data-editor-command="strike" data-title="删除线"><span data-icon="strike"></span></button>
+                        <button type="button" class="editor-tool" data-editor-command="highlight" data-title="高亮"><span data-icon="highlight"></span></button>
+                        <div class="editor-tool-dropdown"><button type="button" class="editor-tool" data-editor-menu="code" data-title="代码格式"><span data-icon="code"></span><i>⌄</i></button><div class="editor-menu" data-editor-menu-panel="code"><button type="button" data-editor-command="code" data-value="inline" data-t="行内代码"></button><button type="button" data-editor-command="code" data-value="block" data-t="代码块"></button></div></div>
+                        <button type="button" class="editor-tool" data-editor-command="quote" data-title="引用"><span data-icon="quote"></span></button>
+                        <button type="button" class="editor-tool" data-editor-command="spoiler" data-title="剧透"><span data-icon="spoiler"></span></button>
+                        <div class="editor-tool-dropdown"><button type="button" class="editor-tool" data-editor-menu="list" data-title="列表格式"><span data-icon="list"></span><i>⌄</i></button><div class="editor-menu" data-editor-menu-panel="list"><button type="button" data-editor-command="list" data-value="unordered" data-t="无序列表"></button><button type="button" data-editor-command="list" data-value="star" data-t="星号列表"></button><button type="button" data-editor-command="list" data-value="ordered" data-t="有序列表"></button><button type="button" data-editor-command="list" data-value="task" data-t="待办列表"></button></div></div>
+                        <button type="button" class="editor-tool" data-editor-command="link" data-title="插入链接"><span data-icon="link"></span></button>
+                        <button type="button" class="editor-tool" data-editor-command="table" data-title="插入表格"><span data-icon="table"></span></button>
+                        <button type="button" class="editor-tool" data-editor-command="divider" data-title="分割线"><span data-icon="divider"></span></button>
+                        <div class="editor-tool-dropdown"><button type="button" class="editor-tool" data-editor-menu="align" data-title="内容对齐"><span data-icon="align"></span><i>⌄</i></button><div class="editor-menu" data-editor-menu-panel="align"><button type="button" data-editor-command="align" data-value="left" data-t="左对齐"></button><button type="button" data-editor-command="align" data-value="center" data-t="居中"></button><button type="button" data-editor-command="align" data-value="right" data-t="右对齐"></button></div></div>
+                        <button type="button" class="editor-tool" data-editor-command="media" data-title="插入媒体"><span data-icon="video"></span></button>
+                        <button type="button" class="editor-tool" data-editor-command="emoji" data-title="表情"><span data-icon="smile"></span></button>
+                        <button id="moment-editor-image" type="button" class="editor-tool" data-editor-command="image" data-title="添加图片"><span data-icon="image"></span></button>
+                        <button type="button" class="editor-tool" data-editor-command="help" data-title="Markdown帮助"><span data-icon="help"></span></button>
+                    </div>
+                </div>
+                <div id="moment-image-preview" class="compose-images"><label class="image-add"><span data-icon="plus"></span><input id="moment-images-grid" type="file" accept="image/jpeg,image/png,image/gif,image/webp" multiple></label></div><input id="moment-editor-files" type="file" accept="image/jpeg,image/png,image/gif,image/webp" multiple hidden>
+                <label id="moment-anonymous-field" class="compose-check" hidden><input id="moment-anonymous" type="checkbox"><span data-t="匿名发布"></span></label>
+                <label class="compose-location"><span data-icon="pin"></span><input id="moment-location" maxlength="200" data-placeholder="添加地点（选填）"><button id="moment-locate" type="button" data-t="使用IP属地"></button></label>
+                <p id="moment-form-error" role="alert"></p>
+                <div class="compose-footer"><span data-t="发布次数按站点设置，回复不限"></span><button class="primary" type="submit" data-t="发布"></button></div>
+            </form>
+        </dialog>
+        <dialog id="moment-image-viewer" class="image-viewer"><button id="image-viewer-close" type="button" data-title="关闭"><span data-icon="close"></span></button><img id="image-viewer-image" alt=""></dialog>
+        <dialog id="editor-help-dialog" class="editor-help-dialog"><div class="dialog-head"><h2 data-t="Markdown帮助"></h2><button id="editor-help-close" type="button" data-title="关闭"><span data-icon="close"></span></button></div><div id="editor-help-content" class="editor-help-content markdown-body"></div></dialog>
+        <footer>
+            Dawn <span data-t="简洁、开放、可扩展"></span
+            ><a
+                href="https://github.com/dawnim/dawn-simple"
+                target="_blank"
+                rel="noopener"
+                >GitHub ↗</a
+            >
+        </footer>
+        <dialog id="auth">
+            <form id="form">
+                <div class="dialog-head">
+                    <h2 id="auth-title"></h2>
+                    <button id="close" type="button" aria-label="关闭">
+                        ×
+                    </button>
+                </div>
+                <label
+                    ><span data-t="用户名"></span
+                    ><input
+                        id="username"
+                        name="username"
+                        required
+                        minlength="3"
+                        maxlength="80"
+                        autocomplete="username" /></label
+                ><label
+                    ><span data-t="密码"></span
+                    ><input
+                        id="password"
+                        name="password"
+                        type="password"
+                        required
+                        minlength="6"
+                        maxlength="72"
+                        autocomplete="current-password" /></label
+                ><label id="nickname-label" hidden
+                    ><span data-t="昵称"></span
+                    ><input
+                        id="nickname"
+                        name="nickname"
+                        maxlength="100"
+                        autocomplete="nickname"
+                /></label>
+                <p id="error" role="alert"></p>
+                <button id="submit" class="primary" type="submit"></button
+                ><button id="toggle" type="button"></button>
+            </form>
+        </dialog>
+    </body>
+</html>
