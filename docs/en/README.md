@@ -20,6 +20,7 @@ Start with [dawn-simple](https://github.com/dawnim/dawn-simple) and extend its m
 | [Backend](backend.md) | Models, migrations, CRUD, menus, cache, and queues |
 | [Database schema maintenance](schema.md) | Native migrations, complete targets, previews, and business definitions |
 | [Frontend](frontend.md) | Page registration, shared components, dashboards, themes, and languages |
+| [Markdown editor](editor.md) | Editor features, image providers, custom tools, and static-site usage |
 | [Authorization and scopes](authorization.md) | Authentication, roles, management levels, and record ownership |
 | [Users and public IDs](users.md) | User types, model extensions, and reversible public IDs |
 | [Configuration](configuration.md) | SQL, Redis, storage, settings, and logs |

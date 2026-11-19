@@ -309,15 +309,19 @@ func registerMoments(a *admin.App) {
 		if q := strings.TrimSpace(c.Query("query")); q != "" {
 			db = db.Where("moments.title LIKE ? OR moments.content LIKE ?", "%"+q+"%", "%"+q+"%")
 		}
+		sortBy := c.Query("sort_by")
+		if sortBy == "activity_at" {
+			db = db.Where("EXISTS (SELECT 1 FROM moment_comments mc WHERE mc.moment_id = moments.id AND mc.deleted_at = 0)")
+		}
 		var total int64
 		if err := db.Session(&gorm.Session{}).Count(&total).Error; err != nil {
 			response.Report(c, err)
 			return
 		}
-		order := "activity_at DESC, moments.id DESC"
-		switch c.Query("sort_by") {
-		case "created_at":
-			order = "moments.id DESC"
+		order := "moments.id DESC"
+		switch sortBy {
+		case "activity_at":
+			order = "activity_at DESC, moments.id DESC"
 		case "hot":
 			order = "comments * 3 + flowers + eggs DESC, moments.id DESC"
 		}
