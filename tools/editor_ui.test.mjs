@@ -303,13 +303,15 @@ test('实时预览左右分栏、预览视图单栏，下拉菜单不被裁剪',
     assert.match(css, /\.compose-editor-shell\.view-preview \.compose-editor\.post \{ display: block; \}/)
     assert.doesNotMatch(css.match(/\.compose-editor-shell \{[^}]*/)?.[0] || '', /overflow:\s*hidden/)
     assert.match(css, /\.editor-menu\.open \{ display: grid/)
+    assert.match(css, /\.editor-toolbar \{[^}]*flex-wrap: nowrap[^}]*overflow-x: auto/)
+    assert.ok(css.includes('@media (max-width: 1023px)'))
 })
 
 test('滚动归属：弹窗定高，滚动只在输入区与预览区内部', () => {
     const css = read('site.css')
     for (const rule of [
         'height: min(calc(100dvh - 32px), 760px)',
-        '.compose-dialog > form { display: flex; flex: 1; flex-direction: column; min-height: 0; }',
+        '.compose-dialog > form { display: flex; flex: 1; flex-direction: column; min-width: 0; min-height: 0; }',
         '.compose-dialog textarea { resize: none; }',
         '.compose-editor textarea { height: 100%; min-height: 0; overflow-y: auto; resize: none;',
         '.markdown-preview { height: 100%; min-height: 0; overflow-y: auto;',
