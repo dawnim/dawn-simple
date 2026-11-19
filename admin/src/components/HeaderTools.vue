@@ -38,11 +38,9 @@
     font-size: 12px;
     white-space: nowrap;
   }
-  @media (max-width: 767px) {
+  @media (max-width: 1279px) {
     .header-clock {
-      max-width: 190px;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      display: none;
     }
   }
 </style>

@@ -9,8 +9,7 @@ const wsPath = process.env.DAWN_WS_PATH || '/'
 export default defineConfig({
   plugins: [vue()],
   define: { 'import.meta.env.VITE_ADMIN_PREFIX': JSON.stringify(adminPrefix) },
-  publicDir: '../public',
-  optimizeDeps: { exclude: ['@dawnim/admin'] },
+  publicDir: false,
   resolve: { dedupe: ['vue', 'vue-router', 'pinia', 'element-plus', 'vue-i18n'] },
   server: {
     host: '127.0.0.1',
@@ -18,6 +17,9 @@ export default defineConfig({
     proxy: {
       [adminPrefix]: httpTarget,
       '/api': httpTarget,
+      '/chat/': httpTarget,
+      '/support-assets': httpTarget,
+      '/storage': httpTarget,
       '/ws': { target: wsTarget, ws: true, rewrite: () => wsPath }
     }
   }

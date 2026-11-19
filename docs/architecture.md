@@ -19,7 +19,7 @@ flowchart TD
 | `app/admin/menu.go` | 代码菜单、权限、缓存与实时扩展注册 |
 | `app/admin/routes.go` | 后台业务路由 |
 | `app/admin/controllers/`、`middleware/` | 业务请求处理与中间件 |
-| `app/admin/realtime.go` | WebSocket 业务处理器 |
+| `app/web` | 官网、动态社区与业务聊天接口 |
 | `app/models/` | 多入口共用的实体，每个实体一个文件 |
 | `app/constants/` | 业务缓存定义与队列名称 |
 | `app/providers/` | 容器绑定、驱动、监听器与语言注册 |

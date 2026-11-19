@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vitepress dev . --host 127.0.0.1",
     "build": "vitepress build .",
+    "build:site": "DAWN_DOCS_SITE=1 vitepress build . --outDir ../public/docs",
+    "build:all": "pnpm build && pnpm build:site",
     "preview": "vitepress preview . --host 127.0.0.1"
   },
   "devDependencies": {

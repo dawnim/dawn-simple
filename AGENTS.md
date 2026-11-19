@@ -4,7 +4,7 @@
 
 main.go与bootstrap负责入口和装配；后台菜单、路由、控制器、中间件放app/admin。共享模型放app/models，业务Key与队列名称放app/constants，基础常量复用dawn-server/constants。业务前端在admin/src，默认仪表盘通过pages映射覆盖。按实际需要添加事件、Job等业务目录，不添加无关功能演示。
 
-管理员聊天由dawn-server与dawn-admin扩展完整提供，本项目通过统一的扩展注册与安装入口使用。业务实时示例只演示业务缓存与处理器，独立于内置聊天。
+管理员聊天由dawn-server与dawn-admin扩展完整提供，本项目通过统一的扩展注册与安装入口使用。动态社区复用公开身份、上传、GeoIP、聊天、WS和AI能力；业务菜单通过widget配置接入，不向扩展硬编码业务。
 
 ## 编码
 
@@ -50,7 +50,13 @@ go vet ./...
 
 若修改 README.md 则dawn-server、dawn-admin、dawn-simple下的README.md同步更新为同样内容
 
-全部教程集中维护在本仓库docs，docs/README.md提供导航；框架维护命令标明所在仓库。
+## 文档更新
+
+全部教程集中维护在本仓库docs；框架维护命令标明所在仓库。新增、删除、改名或调整教程时，同步维护中英文正文及docs/README.md、docs/en/README.md目录，保证每篇教程都有入口。
+
+中英文README是Dawn文档的唯一目录来源，保留二级标题分组及使用相对.md链接的目录表格；docs/.vitepress/config.mts直接生成导航和上下篇，不再另写侧栏清单。官网和GitHub Pages共用此配置，仅部署路径和输出目录不同；PrismGo目录直接读取子模块中英文README，不复制维护。
+
+文档变更后在本仓库执行`pnpm --dir docs build:all`，同时更新官网public/docs与GitHub Pages的docs/.vitepress/dist，检查两边中英文目录、入口和链接。只修改Markdown或README、未重建实际提供服务的文档产物，不算完成。CI同步检查两种构建；线上发布仍按用户指令执行。
 
 文档面向使用者，直接说明已实现功能、核心逻辑和用法。文字简短准确，示例使用通用业务名称；复杂流程使用GitHub支持的Mermaid基础流程图或时序图，并验证语法。文档内部使用相对链接，跨仓库和源码链接使用GitHub地址，便于后续构建文档站。新增示例同步教程与导航，来源集中到README鸣谢，许可证保留版权声明。
 
@@ -80,7 +86,7 @@ HTTP接口以复数资源和方法表达操作：GET集合/详情，POST新增�
 
 批量删除使用DELETE集合?ids=1,2，一次请求、一份事务；必须提供明确ID，不允许整集合删除。写入只接受公开字段，主键、审计与归属字段由服务端维护。PATCH未提交的字段保持原值；PUT必须提供必填字段，省略的可选字段恢复模型默认值或零值。两者均正常写入0、false、空字符串；null只允许可空字段。
 
-列表参数为page、page_size、sort_by、sort_order，默认1/20，不设置每页条数上限。排序使用白名单并追加主键保证稳定；计数、列表、详情、写入和导出使用一致的数据范围。普通列表返回{data:[],meta:{page,page_size,total}}，树返回{data:[]}，Redis使用明确游标。禁止前端伪造总数、固定第一页或静默截断数据。
+列表参数为page、page_size、sort_by、sort_order，默认1/10，不设置每页条数上限。排序使用白名单并追加主键保证稳定；计数、列表、详情、写入和导出使用一致的数据范围。普通列表返回{data:[],meta:{page,page_size,total}}，树返回{data:[]}，Redis使用明确游标。禁止前端伪造总数、固定第一页或静默截断数据。
 
 成功使用HTTP状态：查询/修改200，新增201并设置Location，删除204无正文；详情/新增/修改返回{data:...}，错误返回{message,errors?}。前端只在统一request层解包，不能依赖业务code或兼容多套响应。分页越界需重新取有效页的数据。
 

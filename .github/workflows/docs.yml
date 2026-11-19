@@ -3,9 +3,9 @@ name: Docs
 on:
   push:
     branches: [main]
-    paths: ['docs/**', '.gitmodules', '.github/workflows/docs.yml']
+    paths: ['docs/**', 'tools/**', 'app/web/assets/**', '.gitmodules', '.github/workflows/docs.yml']
   pull_request:
-    paths: ['docs/**', '.gitmodules', '.github/workflows/docs.yml']
+    paths: ['docs/**', 'tools/**', 'app/web/assets/**', '.gitmodules', '.github/workflows/docs.yml']
   workflow_dispatch:
 
 permissions:
@@ -16,6 +16,18 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  markdown:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: tools/package-lock.json
+      - run: npm ci --prefix tools
+      - run: npm --prefix tools test
+
   build:
     runs-on: ubuntu-latest
     steps:
@@ -32,7 +44,7 @@ jobs:
           cache: pnpm
           cache-dependency-path: docs/pnpm-lock.yaml
       - run: pnpm --dir docs install --frozen-lockfile
-      - run: pnpm --dir docs build
+      - run: pnpm --dir docs build:all
       - uses: actions/upload-pages-artifact@v3
         with:
           path: docs/.vitepress/dist

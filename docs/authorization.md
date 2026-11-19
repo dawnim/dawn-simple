@@ -6,7 +6,17 @@
 
 管理员登录后使用 Bearer Token 请求接口，前端公共 `request` 负责凭证携带与刷新。访问与刷新有效期默认均为 30 天，可通过 `DAWN_ACCESS_TTL`、`DAWN_REFRESH_TTL` 配置。
 
-接口校验会话和账号状态；WebSocket 使用 HTTP 签发的一次性票据认证，并持续检查账号有效性。多语言提示按请求的 `Accept-Language` 返回。
+登录状态由PrismGo Session的Redis驱动保存，复用框架的编码、可选加密、过期清理与并发锁，不创建登录会话SQL表。后台、普通用户使用独立命名空间；访客凭证还绑定具体客服应用。人工接待历史仍保存到SQL的`support_sessions`。
+
+内置认证要求在`.env`设置`SESSION_DRIVER=redis`，通过PrismGo标准Session配置读取连接、前缀、编码、加密和锁；配置其他驱动时启动报错。`SESSION_CONNECTION=default`引用`database.redis.default`，连接地址由`REDIS_URL`提供。`SESSION_ENCODING`留空跟随PrismGo统一`encoding.default`。`SESSION_LIFETIME`控制业务Cookie Session，不改变内置Bearer认证的有效期。登录态与普通业务Session、可清理缓存分别隔离；不要把Session中间件套在流式或WS路由上。
+
+刷新凭证只能使用一次，轮转后旧访问和刷新凭证失效。注销或踢设备同时撤销两类凭证；改密码、禁用或删除账号撤销该账号全部设备。会话ID只用于设备管理和WS票据，不能作为访问凭证。接口继续检查账号及当前权限，WebSocket使用HTTP签发的一次性票据，并在通信与心跳时重新检查登录有效性。
+
+重启或重载服务不会注销登录。保持Redis数据和Session连接、前缀、编码及加密配置不变，即可继续使用未过期的登录凭证。WS恢复凭证失效返回409，客户端清除恢复凭证并建立新连接，登录保持有效；只有登录凭证失效才返回401并触发刷新或重新登录。
+
+管理员管理页面的在线会话支持设备列表和单设备撤销。超级管理员可查看全部，普通管理员只能查看和撤销自己的设备，且仍需相应操作权限。`GET /admin/sessions?cursor=0&page_size=10`返回`{data:[],meta:{cursor:"0"}}`，非零游标可继续查询；Redis扫描可能少于或超过请求数量，不提供伪造总数。`DELETE /admin/sessions/{id}`撤销指定设备。
+
+生产Redis应配置持久化、备份和适合登录态的内存淘汰策略。丢失Redis登录数据会要求重新登录，聊天、评价和知识库不会丢失。多语言提示按请求的`Accept-Language`返回。
 
 ## 操作权限
 
@@ -61,9 +71,10 @@ flowchart TD
 |---|---|
 | `created_by` | 支持本人范围；部门类范围按本人处理，“全部”访问全部记录 |
 | `created_by`、`department_id` | 支持四种范围 |
-| 仅 `department_id` 或均无 | 按普通资源生成，数据范围由业务补充 |
+| 仅 `department_id` | 按角色部门范围过滤，`all`可访问全部；无创建者字段时不能表示本人范围 |
+| 均无 | 普通资源，数据范围由业务补充 |
 
-手写资源通过 `Resource.Scope` 过滤，通过 `Resource.Prepare` 写入归属，完整示例见[后端开发](backend.md#手写-crud)。列表、计数、详情、写入、删除、导出和下载使用相同范围。
+自定义资源通过 `Resource.Scope` 过滤，通过 `Resource.Prepare` 写入归属，完整示例见[后端开发](backend.md#调整生成的crud)。列表、计数、详情、写入、删除、导出和下载使用相同范围。
 
 通用 CRUD 由服务端管理上述归属字段，新增和导入时写入，更新时保留。管理员更换部门后，已有记录的归属保持原值。自定义控制器使用 `middleware.Actor(c).Scope(...)`；关联查询传入带表名的列名，如 `records.created_by`。
 

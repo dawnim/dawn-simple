@@ -2,6 +2,9 @@
 /bin/
 /admin/node_modules/
 /admin/dist/
+/tools/node_modules/
+/.pnpm-store/
+/.venv-embedding/
 /docs/node_modules/
 /docs/.vitepress/dist/
 /docs/.vitepress/cache/
@@ -9,3 +12,8 @@
 /storage/*
 !/storage/.gitignore
 /public/storage
+/public/docs/
+
+# 本地框架联调工作区
+/go.work
+/go.work.sum
