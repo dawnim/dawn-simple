@@ -52,7 +52,7 @@ function expand() {
         </svg>
       </button>
     </dialog>
-    <Teleport :to="`#${modalId}`" :disabled="!expanded">
+    <Teleport defer :to="`#${modalId}`" :disabled="!expanded">
       <slot />
     </Teleport>
   </div>
