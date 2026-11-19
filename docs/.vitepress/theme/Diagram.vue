@@ -13,7 +13,7 @@ const modalId = useId()
 const expanded = ref(false)
 
 function expand() {
-  const box = diagram.value?.querySelector<SVGSVGElement>('.mermaid svg[viewBox]')?.viewBox.baseVal
+  const box = diagram.value?.querySelector<SVGSVGElement>('.docs-mermaid svg[viewBox]')?.viewBox.baseVal
   if (!box || !modal.value) return
 
   modal.value.style.setProperty('--diagram-ratio', String(box.width / box.height))

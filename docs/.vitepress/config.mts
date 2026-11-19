@@ -93,6 +93,7 @@ export default withMermaid(
         }
       ]
     ],
+    mermaidPlugin: { class: 'docs-mermaid' },
     mermaid: {
       flowchart: { useMaxWidth: false },
       sequence: { useMaxWidth: false }
