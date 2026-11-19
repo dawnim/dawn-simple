@@ -71,7 +71,7 @@ func TestManagedApplication(t *testing.T) {
 	}
 	env := append(os.Environ(), "APP_NAME=managed-test", "APP_ENV=testing", "APP_DEBUG=false", "APP_KEY=base64:MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=",
 		"GEOIP_ENABLED=false", "SERVER_HOST=127.0.0.1", "SERVER_PORT="+ports[0], "SERVER_ACCESS_LOG=false", "SERVER_SHUTDOWN_TIMEOUT=5s", "WS_ADDR=127.0.0.1:"+ports[1],
-		"DB_CONNECTION=sqlite", "DB_DATABASE="+filepath.Join(dir, "data.sqlite"), "REDIS_URL=redis://"+r.Addr(), "LOG_CHANNEL=single",
+		"DB_CONNECTION=sqlite", "DB_DATABASE="+filepath.Join(dir, "data.sqlite"), "REDIS_URL=redis://"+r.Addr(), "SESSION_DRIVER=redis", "LOG_CHANNEL=single",
 		"FILESYSTEM_LOCAL_ROOT="+filepath.Join(dir, "files"), "HORIZON_CONCURRENCY=1", "HORIZON_HEARTBEAT_TTL=2", "HORIZON_WORKER_TIMEOUT=3", "DAWN_FRONTEND_PORT="+ports[2])
 	install := exec.Command(binary, "dawn:install")
 	install.Dir, install.Env = dir, env
