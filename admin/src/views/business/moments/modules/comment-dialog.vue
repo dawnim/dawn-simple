@@ -3,7 +3,7 @@
     <div class="comment-post">#{{ moment.id }} {{ moment.title }}</div>
     <ElForm v-if="editing" :model="form" label-width="90px" class="comment-form">
       <ElFormItem :label="field('fields.moment_comments.content')" required>
-        <ElInput v-model="form.content" type="textarea" :rows="3" maxlength="300" show-word-limit />
+        <ElInput v-model="form.content" type="textarea" :rows="3" maxlength="1024" show-word-limit />
       </ElFormItem>
       <ElFormItem :label="field('fields.moment_comments.user_id')" required>
         <ElInputNumber v-model="form.user_id" :min="0" />

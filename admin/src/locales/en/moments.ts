@@ -10,7 +10,7 @@ export default {
       title: 'Title',
       board: 'Board',
       content: 'Content',
-      images: 'Images',
+      images: 'Gallery images',
       location: 'Location',
       region: 'IP region',
       created_at: 'Created at',

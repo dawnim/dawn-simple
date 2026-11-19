@@ -21,17 +21,21 @@ window.HTMLDialogElement.prototype.close = function () { this.open = false }
 window.URL.createObjectURL = () => 'blob:http://127.0.0.1/preview'
 window.URL.revokeObjectURL = () => {}
 window.scrollTo = () => {}
+window.localStorage.setItem('dawn.site.locale', 'zh')
 for (const name of ['spark-md5.min.js', 'moment-markdown.js', 'site.js']) window.eval(read(name))
 const $ = (id) => window.document.getElementById(id)
 
-const ed = () => $('moment-editor-shell')
-const input = () => $('moment-content')
-const preview = () => $('moment-preview')
-const tool = (key) => document.querySelector(`#moment-toolbar [data-editor-command="${key}"]`)
-const panel = (name) => $(`editor-${name}-dialog`)
+const dialog = $('moment-dialog')
+const ed = () => $('moment-editor-shell').querySelector('[data-editor-shell]')
+const editorNode = (name) => ed().querySelector(`[data-editor-${name}]`)
+const input = () => editorNode('input')
+const preview = () => editorNode('preview')
+const tool = (key) => ed().querySelector(`[data-editor-command="${key}"]`)
+const panel = (name) => dialog.querySelector(`[data-editor-panel="${name}"]`)
+const help = () => $('moment-editor-shell').querySelector('[data-editor-help]')
 
-test('内核接管官网原版 DOM，没有另造一套皮肤', () => {
-    assert.ok(ed().classList.contains('dawn-editor'))
+test('官网从通用模板挂载编辑器', () => {
+    assert.ok($('moment-editor-shell').classList.contains('dawn-editor'))
     assert.equal(document.querySelectorAll('.md-editor-root, .md-editor-shell').length, 0)
     assert.equal(ed().querySelectorAll('.editor-toolbar .editor-tool').length, 17)
     assert.ok(ed().querySelectorAll('.editor-tool svg').length >= 10)
@@ -54,24 +58,24 @@ test('四项命令打开锚定浮层而不是模态 dialog，再点一次收起'
         assert.equal(tool(name).classList.contains('active'), false)
     }
     assert.equal($('editor-emoji-dialog'), null, '旧的居中表情弹窗应已移除')
-    assert.equal($('editor-help-dialog').tagName, 'DIALOG', 'Markdown 帮助仍是模态 dialog')
+    assert.equal(help().tagName, 'DIALOG', 'Markdown 帮助仍是模态 dialog')
 })
 
 test('切回动态精简模式时自动收起浮层，避免锚点消失后跳到视口左上角', () => {
     const host = document.createElement('div')
     document.body.append(host)
     const editor = window.DawnMomentEditor.create(host, {
-        locale: 'zh', format: 'post', render: (text) => text
+        locale: 'zh', render: (text) => text
     })
     const link = [...document.querySelectorAll('[data-editor-panel="link"]')].at(-1)
     const toolbar = host.querySelector('.editor-toolbar')
     host.querySelector('[data-editor-command="link"]').click()
     assert.equal(link.hidden, false, '帖子模式下浮层可打开')
-    editor.setOptions({ format: 'moment' })
+    editor.setOptions({ compact: true })
     assert.equal(toolbar.hidden, true, '动态模式应隐藏完整工具栏')
     assert.equal(link.hidden, true, '工具栏消失后浮层必须一起收起')
     assert.equal(host.querySelector('[data-editor-command="link"]').classList.contains('active'), false)
-    editor.setOptions({ format: 'post' })
+    editor.setOptions({ compact: false })
     assert.equal(toolbar.hidden, false)
     host.querySelector('[data-editor-command="link"]').click()
     assert.equal(link.hidden, false, '切回帖子后浮层仍可正常打开')
@@ -116,7 +120,7 @@ test('表情分组与占位文案跟随编辑器语言包', () => {
     const host = document.createElement('div')
     document.body.append(host)
     const editor = window.DawnMomentEditor.create(host, {
-        locale: 'en', format: 'post', render: (text) => text, alwaysFull: true
+        locale: 'en', render: (text) => text
     })
     const picker = [...document.querySelectorAll('[data-emoji-panel]')].at(-1)
     host.querySelector('[data-editor-command="emoji"]').click()
@@ -137,7 +141,7 @@ test('表情连续滚动：tab 跟随锚点高亮，点 tab 直接跳到锚点',
     const host = document.createElement('div')
     document.body.append(host)
     const editor = window.DawnMomentEditor.create(host, {
-        locale: 'zh', format: 'post', render: (text) => text, alwaysFull: true
+        locale: 'zh', render: (text) => text
     })
     const picker = [...document.querySelectorAll('[data-emoji-panel]')].at(-1)
     host.querySelector('[data-editor-command="emoji"]').click()
@@ -168,7 +172,7 @@ test('面板按钮不用 type=submit，取消不会误触发宿主表单保存',
     let bubbled = 0
     outer.addEventListener('submit', (event) => { event.preventDefault(); bubbled++ })
     const editor = window.DawnMomentEditor.create(host, {
-        locale: 'zh', format: 'post', render: (text) => text, alwaysFull: true
+        locale: 'zh', render: (text) => text
     })
     const input = host.querySelector('[data-editor-input]')
     // 浮层由内核生成并挂到宿主层（后台是 body），不在编辑器 root 内。
@@ -204,7 +208,7 @@ test('面板按钮不用 type=submit，取消不会误触发宿主表单保存',
 test('插入表格生成合法分隔行且预览渲染成 table', () => {
     $('format-post').click()
     tool('table').click()
-    $('editor-table-grid').querySelector('[data-row="2"][data-column="2"]').click()
+    panel('table').querySelector('[data-table-grid]').querySelector('[data-row="2"][data-column="2"]').click()
     assert.match(input().value, /\|\s*---\s*\|\s*---\s*\|/)
     ed().querySelector('[data-editor-view="live"]').click()
     assert.ok(preview().querySelector('table'), '预览里没有 table')
@@ -213,9 +217,9 @@ test('插入表格生成合法分隔行且预览渲染成 table', () => {
 test('四个下拉菜单点击后处于打开状态', () => {
     $('format-post').click()
     for (const key of ['heading', 'code', 'list', 'align']) {
-        const button = document.querySelector(`#moment-toolbar [data-editor-menu="${key}"]`)
+        const button = ed().querySelector(`[data-editor-menu="${key}"]`)
         button.click()
-        assert.ok(button.parentElement.querySelector('.editor-menu').classList.contains('open'), key)
+        assert.ok(dialog.querySelector(`[data-editor-menu-panel="${key}"]`).classList.contains('open'), key)
     }
 })
 
@@ -228,16 +232,16 @@ test('三视图、全屏、快捷键与草稿', () => {
     assert.equal(input().hidden, true)
     ed().querySelector('[data-editor-view="write"]').click()
     assert.equal(input().hidden, false)
-    const fullBtn = $('moment-fullscreen')
+    const fullBtn = editorNode('fullscreen')
     const enterIcon = fullBtn.innerHTML
-    $('moment-fullscreen').click()
+    editorNode('fullscreen').click()
     assert.ok(ed().classList.contains('fullscreen'))
     const exitIcon = fullBtn.innerHTML
     assert.notEqual(exitIcon, enterIcon, '进入/退出全屏不能用同一个图标')
     assert.match(exitIcon, /<rect/, '退出全屏应有居中的小窗口框，便于一眼分辨')
     assert.doesNotMatch(enterIcon, /<rect/, '进入全屏不应带小窗口框')
     assert.match(fullBtn.title, /退出全屏|Exit fullscreen/)
-    $('moment-fullscreen').click()
+    editorNode('fullscreen').click()
     assert.equal(fullBtn.innerHTML, enterIcon, '再次点击应还原为进入图标')
     assert.match(fullBtn.title, /进入全屏|Fullscreen/)
 
@@ -253,27 +257,27 @@ test('行号随正文行数同步', () => {
     $('format-post').click()
     input().value = '一\n二\n三'
     input().dispatchEvent(new window.Event('input', { bubbles: true }))
-    assert.equal($('moment-lines').textContent, '1\n2\n3')
+    assert.equal(editorNode('lines').textContent, '1\n2\n3')
 })
 
 test('表格网格默认未选中，悬停整体变色、移出复原、点击直接插入', () => {
     $('format-post').click()
     tool('table').click()
-    const grid = $('editor-table-grid')
+    const grid = panel('table').querySelector('[data-table-grid]')
     const cells = [...grid.querySelectorAll('.editor-table-cell')]
     assert.equal(cells.length, 48)
-    assert.match($('editor-table-hint').textContent, /选择表格尺寸|Choose a size/)
+    assert.match(panel('table').querySelector('[data-table-hint]').textContent, /选择表格尺寸|Choose a size/)
     assert.equal(cells.filter((cell) => cell.classList.contains('selected')).length, 0, '原版默认没有预选 3×3')
     grid.querySelector('[data-row="3"][data-column="3"]').dispatchEvent(new window.MouseEvent('mouseover', { bubbles: true }))
-    assert.match($('editor-table-hint').textContent, /3 行 3 列|3 × 3/)
-    assert.equal($('editor-table-size').textContent, '3 × 3')
+    assert.match(panel('table').querySelector('[data-table-hint]').textContent, /3 行 3 列|3 × 3/)
+    assert.equal(panel('table').querySelector('[data-table-size]').textContent, '3 × 3')
     const target = grid.querySelector('[data-row="5"][data-column="4"]')
     target.dispatchEvent(new window.MouseEvent('mouseover', { bubbles: true }))
-    assert.match($('editor-table-hint').textContent, /5 行 4 列|5 × 4/)
+    assert.match(panel('table').querySelector('[data-table-hint]').textContent, /5 行 4 列|5 × 4/)
     assert.equal(cells.filter((cell) => cell.classList.contains('selected')).length, 20)
     grid.dispatchEvent(new window.MouseEvent('mouseleave', { bubbles: false }))
     assert.equal(cells.filter((cell) => cell.classList.contains('selected')).length, 0, '移出网格应复原')
-    assert.match($('editor-table-hint').textContent, /选择表格尺寸|Choose a size/)
+    assert.match(panel('table').querySelector('[data-table-hint]').textContent, /选择表格尺寸|Choose a size/)
     target.dispatchEvent(new window.MouseEvent('mouseover', { bubbles: true }))
     target.click()
     assert.equal(panel('table').hidden, true)
@@ -287,7 +291,7 @@ test('工具栏提示样式统一，H1 不再是深色大卡片', () => {
         assert.ok(!source.includes('.editor-tip-shortcuts'), '仍存在特例快捷键样式')
     }
     $('format-post').click()
-    const heading = document.querySelector('#moment-toolbar [data-editor-menu="heading"]')
+    const heading = ed().querySelector('[data-editor-menu="heading"]')
     heading.dispatchEvent(new window.MouseEvent('mouseenter', { bubbles: false }))
     const tip = document.body.querySelector('.editor-tooltip')
     assert.ok(tip, '未生成提示气泡')
@@ -312,10 +316,9 @@ test('滚动归属：弹窗定高，滚动只在输入区与预览区内部', ()
     for (const rule of [
         'height: min(calc(100dvh - 32px), 760px)',
         '.compose-dialog > form { display: flex; flex: 1; flex-direction: column; min-width: 0; min-height: 0; }',
-        '.compose-dialog textarea { resize: none; }',
-        '.compose-editor textarea { height: 100%; min-height: 0; overflow-y: auto; resize: none;',
-        '.markdown-preview { height: 100%; min-height: 0; overflow-y: auto;',
     ]) assert.ok(css.includes(rule), rule)
+    assert.doesNotMatch(css, /\.editor-toolbar\s*\{/)
+    assert.match(read('moment-markdown.css'), /\.markdown-preview \{ height: 100%; min-height: 0; overflow-y: auto;/)
 })
 
 test('高亮配色分亮暗两套，暗色不再是亮黄底配浅色字', () => {
@@ -371,18 +374,18 @@ test('链接按选区预填，媒体按地址推断类型，剧透选项点一�
     input().setSelectionRange(0, input().value.length)
     input().dispatchEvent(new window.Event('select', { bubbles: true }))
     tool('link').click()
-    assert.equal($('editor-link-text').value, '')
-    assert.equal($('editor-link-url').value, 'https://example.com/page')
-    assert.equal($('editor-link-dialog').querySelector('[data-panel-action="default"]').disabled, false)
+    assert.equal(panel('link').querySelector('[data-link-text]').value, '')
+    assert.equal(panel('link').querySelector('[data-link-url]').value, 'https://example.com/page')
+    assert.equal(panel('link').querySelector('[data-panel-action="default"]').disabled, false)
 
     tool('media').click()
-    assert.equal($('editor-media-dialog').querySelector('[data-panel-action="default"]').disabled, true)
-    const mediaUrl = $('editor-media-url')
+    assert.equal(panel('media').querySelector('[data-panel-action="default"]').disabled, true)
+    const mediaUrl = panel('media').querySelector('[data-media-url]')
     mediaUrl.value = 'https://cdn.example.com/clip.mp4'
     mediaUrl.dispatchEvent(new window.Event('input', { bubbles: true }))
-    assert.match($('editor-media-dialog').querySelector('[data-media-hint]').textContent, /视频|video/i)
-    assert.equal($('editor-media-dialog').querySelector('[data-panel-action="default"]').disabled, false)
-    $('editor-media-dialog').querySelector('[data-panel-action="default"]').click()
+    assert.match(panel('media').querySelector('[data-media-hint]').textContent, /视频|video/i)
+    assert.equal(panel('media').querySelector('[data-panel-action="default"]').disabled, false)
+    panel('media').querySelector('[data-panel-action="default"]').click()
     assert.match(input().value, /MEDIA::video::/)
 
     input().value = ''
@@ -397,7 +400,7 @@ test('链接按选区预填，媒体按地址推断类型，剧透选项点一�
 
 test('四项是锚定浮层，选区条跟随选区，按钮有激活态样式', () => {
     const css = read('site.css'), md = read('moment-markdown.css')
-    for (const source of [css, md]) {
+    for (const source of [md]) {
         assert.match(source, /\.editor-panel \{ position: fixed/)
         assert.match(source, /\.editor-selection-bar \{ position: fixed/)
         assert.match(source, /\.editor-tool\.active/)
@@ -420,125 +423,84 @@ function dropImage(input, file) {
     input.dispatchEvent(event)
 }
 
-test('不接图片 provider 时图片按钮仍是旧版直接选文件，且没有浮层与附件区', () => {
+test('无图片 provider 时隐藏插图入口', () => {
     const { host, editor } = isolatedEditor({})
-    let clicked = 0
-    const files = host.querySelector('[data-editor-files]')
-    files.addEventListener('click', () => clicked++)
-    host.querySelector('[data-editor-command="image"]').click()
-    assert.equal(clicked, 1, '应直接触发文件选择')
-    assert.equal(host.querySelectorAll('[data-editor-panel="image"]:not([hidden])').length, 0)
-    assert.equal(host.querySelector('.editor-attachments').hidden, true)
+    assert.equal(host.querySelector('[data-editor-command="image"]').hidden, true)
+    assert.equal(host.querySelector('.editor-attachments'), null)
     editor.destroy()
     host.remove()
 })
 
-test('秒传命中不重新上传：只调用 check，正文插入真实 id，blob 不进保存数据', async () => {
-    const calls = { check: 0, upload: 0 }
-    const ids = []
+test('秒传命中插入标准 Markdown，图库状态由使用方维护', async () => {
+    let uploads = 0
     const { host, editor, input } = isolatedEditor({
-        imageTarget: 'body',
         imageUploader: {
-            fingerprint: async () => ({ sha256: 'a'.repeat(64) }),
-            check: async (files) => { calls.check++; return [{ id: 42, url: '/api/moment-images/42/content', name: files[0].name }] },
-            upload: async () => { calls.upload++; return [] }
-        },
-        onImagesChange: (next) => ids.push([...next])
+            check: async () => [{ id: 42, url: '/img/42.png', name: 'shot.png' }],
+            upload: async () => { uploads++; return [] }
+        }
     })
     dropImage(input, new window.File(['x'], 'shot.png', { type: 'image/png' }))
     await settle()
-    assert.equal(calls.check, 1)
-    assert.equal(calls.upload, 0, '秒传命中不应再次上传/入库')
-    assert.match(editor.getValue(), /!\[shot\.png\]\(attachment:\/\/42\)/)
-    assert.deepEqual([...editor.getImages()], [42])
-    assert.deepEqual([...ids.at(-1)], [42])
-    assert.ok(host.querySelector('.editor-attachment.done'))
+    assert.equal(uploads, 0)
+    assert.match(editor.getValue(), /!\[shot\.png\]\(<\/img\/42\.png>\)/)
+    assert.equal(host.querySelector('.editor-attachments'), null)
     editor.destroy()
     host.remove()
 })
 
-test('秒传未命中才上传；剪贴板只给 items 也能粘贴上传', async () => {
-    const calls = { check: 0, upload: 0 }
+test('粘贴图片可独立启用，业务可以定义正文标记', async () => {
+    let uploads = 0
     const { host, editor, input } = isolatedEditor({
-        imageTarget: 'gallery',
+        config: () => ({ hidden: ['image'] }),
         imageUploader: {
-            check: async () => { calls.check++; return [null] },
-            upload: async () => { calls.upload++; return [{ id: 9, url: '/api/moment-images/9/content', name: 'pasted.png' }] }
+            upload: async () => { uploads++; return [{ id: 9, url: '/img/9.png' }] },
+            toMarkdown: image => `[attachment://${image.id}]`
         }
     })
-    const file = new window.File(['x'], '', { type: 'image/png' })
-    const event = new window.Event('paste', { bubbles: true, cancelable: true })
-    Object.defineProperty(event, 'clipboardData', { value: { files: [], items: [{ kind: 'file', type: 'image/png', getAsFile: () => file }] } })
-    input.dispatchEvent(event)
+    const paste = () => {
+        const file = new window.File(['x'], '', { type: 'image/png' })
+        const event = new window.Event('paste', { bubbles: true, cancelable: true })
+        Object.defineProperty(event, 'clipboardData', { value: { files: [], items: [{ kind: 'file', type: 'image/png', getAsFile: () => file }] } })
+        input.dispatchEvent(event)
+        return event.defaultPrevented
+    }
+    assert.equal(paste(), false)
+    assert.equal(uploads, 0)
+    editor.setOptions({ pasteImages: true })
+    assert.equal(paste(), true)
     await settle()
-    assert.equal(calls.check, 1)
-    assert.equal(calls.upload, 1)
-    assert.equal(editor.getValue(), '', 'gallery 落点不写正文')
-    assert.deepEqual([...editor.getImages()], [9])
-    assert.match(host.querySelector('.editor-attachment small').textContent, /Clipboard_Screenshot_/)
+    assert.equal(uploads, 1)
+    assert.equal(editor.getValue(), '[attachment://9]')
     editor.destroy()
     host.remove()
 })
 
-test('历史图两种落点：插正文 / 仅加入下方附件区，都不会重新上传', async () => {
-    let uploads = 0
-    const { host, editor } = isolatedEditor({
-        imageTarget: 'choose',
-        imageLibrary: { list: async () => [{ id: 7, url: '/img/7.png', name: 'old.png' }] },
-        imageUploader: { upload: async () => { uploads++; return [] } }
+test('自定义工具包裹选区，渲染器接收原始业务标记', () => {
+    const { host, editor, input } = isolatedEditor({
+        value: '正文',
+        render: text => text.replace(/\[login\](.*?)\[\/login\]/, '<b>$1</b>'),
+        customTools: [{ key: 'login', title: '登录可见', onClick: ({ editor }) =>
+            editor.insertText(selected => `[login]${selected}[/login]`) }]
     })
-    editor.openImageLibrary()
-    await settle()
-    const panel = [...document.querySelectorAll('[data-editor-panel="image"]')].at(-1)
-    assert.equal(panel.hidden, false)
-    assert.equal(panel.querySelectorAll('.editor-library-item').length, 1)
-    panel.querySelector('[data-library-mode="body"]').click()
-    panel.querySelector('.editor-library-item').click()
-    assert.match(editor.getValue(), /attachment:\/\/7/)
-    editor.openImageLibrary()
-    await settle()
-    const panel2 = [...document.querySelectorAll('[data-editor-panel="image"]')].at(-1)
-    panel2.querySelector('[data-library-mode="gallery"]').click()
-    const before = editor.getValue()
-    panel2.querySelector('.editor-library-item').click()
-    assert.equal(editor.getValue(), before, '仅加入附件区不写正文')
-    assert.equal(uploads, 0, '历史图只展示 id/url，绝不触发上传')
-    assert.deepEqual([...editor.getImages()], [7])
+    input.setSelectionRange(0, 2)
+    host.querySelector('[data-editor-tool="login"]').click()
+    assert.equal(editor.getValue(), '[login]正文[/login]')
+    host.querySelector('[data-editor-view="preview"]').click()
+    assert.equal(host.querySelector('[data-editor-preview] b').textContent, '正文')
+    editor.setOptions({ config: () => ({ hidden: ['login'] }) })
+    assert.equal(host.querySelector('[data-editor-tool="login"]'), null)
     editor.destroy()
     host.remove()
-})
-
-test('自定义按钮可注册到附件区并被 config.hidden 隐藏', () => {
-    let opened = 0
-    const { host, editor } = isolatedEditor({
-        imageLibrary: { list: async () => [] },
-        customTools: [{ key: 'my-images', title: '我的图片', icon: 'image', where: 'attachments', onClick: () => opened++ }]
-    })
-    const button = host.querySelector('[data-editor-tool="my-images"]')
-    assert.ok(button)
-    assert.equal(button.title, '我的图片')
-    button.click()
-    assert.equal(opened, 1)
-    editor.destroy()
-    host.remove()
-    const hidden = isolatedEditor({
-        imageLibrary: { list: async () => [] },
-        config: () => ({ hidden: ['my-images'] }),
-        customTools: [{ key: 'my-images', title: '我的图片', where: 'attachments', onClick: () => opened++ }]
-    })
-    assert.equal(hidden.host.querySelector('[data-editor-tool="my-images"]'), null)
-    hidden.editor.destroy()
-    hidden.host.remove()
 })
 
 test('官网动态格式隐藏媒体按钮、字数 1024；帖子格式恢复', () => {
     $('format-moment').click()
-    assert.equal(document.querySelector('#moment-toolbar [data-editor-command="image"]').hidden, true)
-    assert.equal(document.querySelector('#moment-toolbar [data-editor-command="media"]').hidden, true)
-    assert.equal($('moment-content').maxLength, 1024)
+    assert.equal(tool('image').hidden, true)
+    assert.equal(tool('media').hidden, true)
+    assert.equal(editorNode('input').maxLength, 1024)
     $('format-post').click()
-    assert.equal(document.querySelector('#moment-toolbar [data-editor-command="image"]').hidden, false)
-    assert.equal($('moment-content').maxLength, 10000)
+    assert.equal(tool('image').hidden, false)
+    assert.equal(editorNode('input').maxLength, 10000)
 })
 
 test('多个编辑器实例的 Markdown 帮助弹窗互不串台（动态模板不再生成重复 id）', () => {
@@ -548,9 +510,7 @@ test('多个编辑器实例的 Markdown 帮助弹窗互不串台（动态模板�
     const help2 = second.host.querySelector('[data-editor-help]')
     assert.ok(help1 && help2, '每个实例都应有自己的帮助弹窗')
     assert.notEqual(help1, help2)
-    assert.ok(help1.id && help2.id, '动态生成的帮助弹窗也应有可查询的 id')
-    assert.notEqual(help1.id, help2.id, '两个实例的 id 必须唯一')
-    assert.equal(document.querySelectorAll('#editor-help-dialog').length, 1, '静态 id 不应被重复生成')
+    assert.equal(!!help1.id || !!help2.id, false)
 
     first.host.querySelector('[data-editor-command="help"]').click()
     assert.equal(help1.open, true, '第一个实例应打开自己的帮助')
@@ -567,21 +527,43 @@ test('多个编辑器实例的 Markdown 帮助弹窗互不串台（动态模板�
 
     // 官网主编辑器接管的是静态那份，仍然能正常打开
     tool('help').click()
-    assert.equal($('editor-help-dialog').open, true)
-    $('editor-help-dialog').close()
+    assert.equal(help().open, true)
+    help().close()
 })
 
-test('自定义工具按钮打开图库浮层后，不被「点外部关闭」逻辑立刻收起', () => {
-    document.querySelectorAll('[data-editor-panel="image"]').forEach(node => { node.hidden = true })
-    const { host, editor } = isolatedEditor({
-        imageLibrary: { list: async () => [] },
-        customTools: [{
-            key: 'my-images', title: '我的图片', where: 'attachments',
-            onClick: ({ editor: instance }) => instance.openImageLibrary()
-        }]
-    })
-    host.querySelector('[data-editor-tool="my-images"]').click()
-    assert.equal(document.querySelectorAll('[data-editor-panel="image"]:not([hidden])').length, 1,
-        '自定义按钮属于编辑器内部，点击冒泡到 document 时不能当成点外部')
-    editor.destroy(); host.remove()
+test('详情页仅展示一次正文图片，编辑仍保留图库 ID 和文件原名', async () => {
+    const row = { id: 14, format: 'post', title: '图文', content: '[attachment://3]', images: '[3,8]',
+        image_names: { 3: '原图.png' }, can_manage: true, comments: 0, created_at: 1000 };
+    const fetch = window.fetch
+    let sent
+    window.fetch = async (path, options) => {
+        if (String(path).startsWith('/api/moments/14/comments')) {
+            return { ok: true, json: async () => ({ data: [], meta: { page_size: 10, total: 0 } }) }
+        }
+        if (path === '/api/moments/14') {
+            if (options.method === 'PUT') sent = JSON.parse(options.body)
+            return { ok: true, json: async () => ({ data: row }) }
+        }
+        return fetch(path, options)
+    }
+    try {
+        window.history.pushState(null, '', '/moments/14')
+        window.dispatchEvent(new window.PopStateEvent('popstate'))
+        await settle()
+        const detail = document.querySelector('.moment-detail')
+        assert.equal(detail.querySelector('.moment-content img')?.alt, '原图.png')
+        assert.deepEqual(Array.from(detail.querySelectorAll('.moment-images img'), img => new URL(img.src).pathname), ['/api/moments/14/images/8'])
+        Array.from(detail.querySelectorAll('button')).find(button => button.textContent === '编辑').click()
+        await settle()
+        assert.equal($('moment-dialog-title').textContent, '编辑动态')
+        assert.equal($('moment-submit').textContent, '保存修改')
+        assert.equal($('moment-image-preview').querySelectorAll('img').length, 2)
+        input().value = '移除正文图'
+        $('moment-form').dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true }))
+        await settle()
+        assert.deepEqual(sent.images, [3, 8])
+        assert.equal(sent.content, '移除正文图')
+    } finally {
+        window.fetch = fetch
+    }
 })

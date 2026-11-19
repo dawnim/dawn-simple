@@ -81,12 +81,31 @@ md.renderer.rules.heading_open = (tokens, index, options, env, self) => {
     return self.renderToken(tokens, index, options)
 }
 
-md.renderer.rules.image = (tokens, index, options, _env, self) => {
-    const src = tokens[index].attrGet('src') || ''
-    if (!/^(\/|blob:|https?:\/\/)/i.test(src)) return esc(tokens[index].attrGet('alt') || src)
-    tokens[index].attrSet('loading', 'lazy')
-    tokens[index].attrSet('class', 'md-image')
-    return self.renderToken(tokens, index, options)
+const imageRule = md.renderer.rules.image
+md.renderer.rules.image = (tokens, index, options, env, self) => {
+    const token = tokens[index]
+    const src = token.attrGet('src') || ''
+    if (/^[a-z][a-z\d+.-]*:/i.test(src) && !/^(blob:|https?:\/\/)/i.test(src))
+        return esc(self.renderInlineAsText(token.children || [], options, env))
+    token.attrSet('loading', 'lazy')
+    token.attrSet('class', 'md-image')
+    return imageRule(tokens, index, options, env, self)
+}
+
+md.inline.ruler.before('link', 'attachment', (state, silent) => {
+    if (state.src[state.pos] !== '[' || state.src[state.pos - 1] === '!') return false
+    const match = /^\[attachment:\/\/([1-9]\d*)\](?![([])/.exec(state.src.slice(state.pos, state.posMax))
+    if (!match) return false
+    if (!silent) state.push('attachment', '', 0).content = match[1]
+    state.pos += match[0].length
+    return true
+})
+md.renderer.rules.attachment = (tokens, index, _options, env) => {
+    const id = tokens[index].content
+    const image = env.resolveAttachment?.(id)
+    if (!image) return `[attachment://${id}]`
+    const src = image.url ? ` src="${esc(image.url)}"` : ''
+    return `<img${src} alt="${esc(image.name || '')}" class="md-image" data-moment-attachment="${id}" loading="lazy">`
 }
 
 const linkRule = md.renderer.rules.link_open || ((tokens, index, options, _env, self) => self.renderToken(tokens, index, options))
@@ -118,11 +137,11 @@ function preprocess(source) {
 }
 
 /** 帖子 Markdown -> 安全 HTML。emojis 为后台配置的短码表。 */
-export function renderMarkdown(source, emojis = {}) {
-    const html = md.render(preprocess(source || ''), { emojis, slugs: new Map() })
+export function renderMarkdown(source, emojis = {}, resolveAttachment) {
+    const html = md.render(preprocess(source || ''), { emojis, resolveAttachment, slugs: new Map() })
     return DOMPurify.sanitize(html, {
         ADD_TAGS: ['center', 'ruby', 'rt', 'rp', 'iframe', 'details', 'summary', 'input'],
-        ADD_ATTR: ['align', 'target', 'loading', 'checked', 'disabled', 'sandbox', 'allowfullscreen', 'data-md-mask'],
+        ADD_ATTR: ['align', 'target', 'loading', 'checked', 'disabled', 'sandbox', 'allowfullscreen', 'data-md-mask', 'data-moment-attachment'],
         ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|sms|cid|xmpp|matrix|blob):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
         FORBID_TAGS: ['script', 'style', 'form', 'object', 'embed'],
         FORBID_ATTR: ['style', 'onerror', 'onload'],

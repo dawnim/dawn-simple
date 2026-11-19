@@ -4,7 +4,7 @@ export default {
       title: '标题',
       board: '板块',
       content: '内容',
-      images: '图片',
+      images: '图库图片',
       location: '标记地点',
       region: 'IP属地',
       created_at: '创建时间',

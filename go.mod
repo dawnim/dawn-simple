@@ -12,6 +12,7 @@ require (
 	github.com/prismgo/framework v0.3.2
 	github.com/prismgo/horizon v0.1.0
 	github.com/redis/go-redis/v9 v9.22.0
+	github.com/yuin/goldmark v1.4.13
 	golang.org/x/net v0.58.0
 	gorm.io/gorm v1.31.2
 	gorm.io/plugin/soft_delete v1.2.1
@@ -158,3 +159,5 @@ require (
 	modernc.org/memory v1.5.0 // indirect
 	modernc.org/sqlite v1.23.1 // indirect
 )
+
+replace github.com/dawnim/dawn-server => ../dawn-server

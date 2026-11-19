@@ -3,9 +3,11 @@ package web
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -209,10 +211,55 @@ func TestCommunityJourney(t *testing.T) {
 			t.Fatalf("query: %#v", result)
 		}
 	}
-	anonymous := call(201, "POST", "/api/moments", bob, map[string]any{"format": "post", "title": "Private notes", "content": "## Hidden\n\n```go\nfmt.Println(1)\n```", "is_anonymous": true})["data"].(map[string]any)
+	var uploadBody bytes.Buffer
+	writer := multipart.NewWriter(&uploadBody)
+	part, err := writer.CreateFormFile("file", "原始图片.png")
+	if err != nil {
+		t.Fatal(err)
+	}
+	png, err := base64.StdEncoding.DecodeString("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/kjkAAAAASUVORK5CYII=")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := part.Write(png); err != nil {
+		t.Fatal(err)
+	}
+	if err := writer.Close(); err != nil {
+		t.Fatal(err)
+	}
+	upload := httptest.NewRequest("POST", "/api/moment-images", &uploadBody)
+	upload.Header.Set("Content-Type", writer.FormDataContentType())
+	upload.Header.Set("Authorization", "Bearer "+bob)
+	uploaded := httptest.NewRecorder()
+	handler.ServeHTTP(uploaded, upload)
+	var attachment struct {
+		Data struct {
+			ID   uint
+			Name string
+		}
+	}
+	if err := json.Unmarshal(uploaded.Body.Bytes(), &attachment); err != nil || uploaded.Code != 201 || attachment.Data.Name != "原始图片.png" {
+		t.Fatalf("image upload: %d %s %v", uploaded.Code, uploaded.Body.String(), err)
+	}
+	imageID := attachment.Data.ID
+	imageMarker := fmt.Sprintf("[attachment://%d]", imageID)
+	call(422, "PUT", path, alice, map[string]any{"format": "post", "title": "Unauthorized image", "content": imageMarker})
+	anonymousInput := map[string]any{"format": "post", "title": "Private notes", "content": "## Hidden\n\n" + imageMarker, "images": []uint{imageID}, "is_anonymous": true}
+	anonymous := call(201, "POST", "/api/moments", bob, anonymousInput)["data"].(map[string]any)
+	anonymousPath := "/api/moments/" + fmt.Sprint(int(anonymous["id"].(float64)))
 	anonymousView := call(200, "GET", "/api/moments/"+fmt.Sprint(int(anonymous["id"].(float64))), "", nil)["data"].(map[string]any)
 	if anonymousView["is_anonymous"] != true || anonymousView["nickname"] != "匿名用户" || anonymousView["unique_id"] != "" {
 		t.Fatal("anonymous author leaked", anonymousView)
+	}
+	if anonymousView["image_names"].(map[string]any)[fmt.Sprint(imageID)] != "原始图片.png" || anonymousView["images"] != fmt.Sprintf("[%d]", imageID) {
+		t.Fatalf("image name or gallery missing: %#v", anonymousView)
+	}
+	anonymousInput["images"] = []uint{}
+	call(200, "PUT", anonymousPath, bob, anonymousInput)
+	imageResponse := httptest.NewRecorder()
+	handler.ServeHTTP(imageResponse, httptest.NewRequest("GET", fmt.Sprintf("%s/images/%d", anonymousPath, imageID), nil))
+	if imageResponse.Code != 200 || !bytes.Equal(imageResponse.Body.Bytes(), png) {
+		t.Fatalf("anonymous read of body-only image: %d %q", imageResponse.Code, imageResponse.Body.String())
 	}
 	ownerView := call(200, "GET", "/api/moments/"+fmt.Sprint(int(anonymous["id"].(float64))), bob, nil)["data"].(map[string]any)
 	if ownerView["can_manage"] != true {

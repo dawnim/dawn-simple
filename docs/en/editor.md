@@ -1,125 +1,55 @@
 # Markdown editor
 
-`@dawnim/admin` ships a complete Markdown editor kernel: skin, toolbar, floating panels, live preview, fullscreen, emoji, and table interactions. Applications only provide rendering rules, image endpoints, and a few options — the editor UI itself is never reimplemented.
-
-The website (`app/web/assets/site.js`, via `window.DawnMomentEditor`) and the admin panel (`createMarkdownEditor`) use the same kernel.
-
-## Features
-
-| Area | Capabilities |
-|---|---|
-| Writing | Headings, bold / italic / underline / strikethrough / highlight, inline and block code, quotes, lists, alignment, tables, links, spoilers, video, `@` mentions |
-| Views | Write, live preview, and preview modes; side-by-side on wide screens, stacked on narrow screens; fullscreen and line numbers |
-| Emoji | Full built-in dataset with grouped scrolling, sticky anchors, following tabs, and remembered recent emojis |
-| Images | History library, dedupe checks, immediate upload, file picker / drag-and-drop / clipboard paste, body or attachment-gallery targets |
-| Extension | Hide any tool, add custom tools, multiple isolated instances, and safe editing of existing content without re-uploading |
-
-On small screens the toolbar stays on one line and scrolls horizontally; it never wraps and pushes the textarea down.
+The editor provides a toolbar, three editing views, fullscreen mode, line numbers, emoji, keyboard shortcuts, and isolated instances. On narrow screens, the toolbar scrolls horizontally and live preview stacks vertically. Any frontend with a DOM container can mount it and supply its own rendering and upload handlers.
 
 ## Quick start
 
 ```ts
-import { createMarkdownEditor, editorTemplate, renderMarkdown } from '@dawnim/admin'
-import '@dawnim/admin/style.css'
+import { createMarkdownEditor, renderMarkdown } from '@dawnim/admin/editor'
+import '@dawnim/admin/editor.css'
 
-const root = document.querySelector<HTMLElement>('#editor')!
-root.innerHTML = editorTemplate('zh')
-
-const editor = createMarkdownEditor(root, {
-  render: (text) => renderMarkdown(text),
-  maxLength: 1024,
-  onChange: (text) => console.log(text)
+const editor = createMarkdownEditor(document.querySelector<HTMLElement>('#editor')!, {
+  render: renderMarkdown,
+  maxLength: 10000,
+  placeholder: 'Write something'
 })
+
+// Read the Markdown source when the form is submitted
+const markdown = editor.getValue()
 ```
 
-If the page already contains the same editor DOM, pass that container directly and the kernel adopts it instead of generating a second copy.
+The standalone entry point uses the browser DOM. Admin apps can import the same API from `@dawnim/admin`. For a server-rendered template or plain HTML, load `dist/dawn-editor.js` and `dist/dawn-editor.css` from the package and mount an empty container with `window.DawnEditor.createMarkdownEditor`.
 
-For plain script tags, use the published `dist/dawn-editor.js` and `dist/dawn-editor.css`. The script is an IIFE exposing `window.DawnEditor` with `createMarkdownEditor`, `editorTemplate`, `renderEditorIcons`, `renderMarkdown`, and `enhanceMarkdown`.
-
-## Key options
+## Configuration and instance methods
 
 | Option | Purpose |
 |---|---|
-| `render(text)` | Required. Application Markdown renderer used by previews and summaries |
-| `enhance(root)` | Post-render DOM enhancement such as lightboxes or syntax highlighting |
-| `value` / `maxLength` | Initial content (default limit 300) and maximum length |
-| `format` | `moment` for compact posts or `post` for the full editor |
-| `alwaysFull` | Keep the full toolbar and preview even for `moment` (admin use) |
-| `locale` | `zh` or `en` for built-in copy |
-| `mentions(query)` | Resolve `{ label, value }[]` for `@` suggestions |
-| `config()` | Return `{ hidden: string[] }` to hide tools by key |
-| `previewImage(src)` | Handle image clicks in previews |
-| `onChange(text)` / `onSaveDraft()` | Content changes and `Cmd/Ctrl+S` |
-| `onImagesChange(ids)` | Referenced image ids changed |
+| `render(text)` | Return sanitized HTML from Markdown or an application-defined dialect |
+| `enhance(root)` | Add interactions after preview rendering |
+| `value` / `placeholder` / `maxLength` | Initial content, input hint, and character limit |
+| `compact` / `locale` | Compact view and `zh` or `en` UI text |
+| `config()` | Return `{ hidden: string[] }` to hide tools by key, such as `image` or `media` |
+| `mentions(query)` / `previewImage(src)` | Mention suggestions and preview image clicks |
+| `onChange(text)` / `onSaveDraft()` | Document changes and `Cmd/Ctrl+S` |
+| `imageLibrary` / `imageUploader` | Query existing images and upload new files |
+| `pasteImages` | Off by default. With an uploader, paste uploads and inserts images into the document independently of button visibility |
+| `mediaMarkup(url, type)` | Customize media insertion text. The default is a Markdown link |
+| `customTools` | Register a toolbar button and its action |
 
-Instance methods: `getValue()`, `setValue(text)`, `insertText(text)`, `focus()`, `getImages()`, `setImages(images)`, `openImageLibrary(anchor?)`, `setOptions(...)`, and `destroy()`. Use `setImages` to restore attachments when editing existing content; it never re-uploads.
+Use `getValue()`, `setValue(text)`, `insertText(textOrTransform)`, `setOptions(options)`, `focus()`, or `destroy()` on an instance. A function passed to `insertText` receives the current selection.
 
-## Images
+## Images and custom syntax
 
-All image providers are optional. Without them the image button falls back to a plain file picker.
+Image providers return `{ id, url, name? }`. The default inserts a standard Markdown image with a persistable URL. The image button can query `imageLibrary.list(keyword)` or open a file picker. Supply `imageUploader.fingerprint` and `check` for deduplication. `check` returns one match or `null` per file, and `upload` returns images in input order. Use `imageUploader.toMarkdown(image, name)` to insert an application-specific reference.
 
-```ts
-const editor = createMarkdownEditor(root, {
-  render: renderMarkdown,
-  imageTarget: 'choose',
-  imageLibrary: {
-    list: (keyword) => api.get('/api/moment-images/mine', { params: { keyword } }),
-    refresh() { grid.reload() }
-  },
-  imageUploader: {
-    fingerprint: async (file) => ({ md5: await md5(file), sha256: await sha256(file) }),
-    check: (files, prints) => api.post('/api/moment-image-checks', { files: prints }),
-    upload: (files, prints) => api.upload('/api/moment-images', files, prints),
-    toMarkdown: (image, name) => `![${name || image.name}](${image.url})`
-  },
-  onImagesChange: (ids) => console.log(ids)
-})
-```
-
-`check` must return one result per input file: an existing image for a dedupe hit, `null` otherwise. Without `check`, every file is uploaded. `toMarkdown` controls the syntax inserted into the body.
-
-`imageTarget` picks the default destination:
-
-| Value | Behaviour |
-|---|---|
-| `body` | Insert into the document |
-| `gallery` | Only add to the attachment gallery |
-| `choose` | Let the user pick in the library panel |
-
-Picker, drag-and-drop, and clipboard paste share the same pipeline: fingerprint, dedupe check, then upload. Blob URLs are local previews only and are never persisted again.
-
-## Custom tools
+An application can extend both the toolbar and renderer. This button wraps the selection in `[login]…[/login]`.
 
 ```ts
-createMarkdownEditor(root, {
-  render: renderMarkdown,
-  config: () => ({ hidden: ['media', 'alignment'] }),
-  customTools: [{
-    key: 'my-images',
-    title: ['我的图片', 'My images'],
-    icon: 'image',
-    where: 'both',
-    onClick: ({ editor, anchor }) => editor.openImageLibrary(anchor)
-  }]
-})
+customTools: [{
+  key: 'login',
+  title: ['登录可见', 'Sign-in required'],
+  onClick: ({ editor }) => editor.insertText(text => `[login]${text}[/login]`)
+}]
 ```
 
-`where` accepts `toolbar`, `attachments`, or `both`. On pages with multiple editors, pass a distinct `attachmentHost` to each instance.
-
-## Static site integration
-
-The website build concatenates the framework `dist/dawn-editor.js/css` with the application render bundle into `moment-markdown.js/css`, which Go embeds. The application keeps only its Markdown rules:
-
-```js
-const { enhanceMarkdown, createMarkdownEditor } = window.DawnEditor
-window.DawnMomentMarkdown = { render: renderMarkdown, enhanceMarkdown }
-window.DawnMomentEditor = { create: createMarkdownEditor }
-```
-
-Upgrading the framework therefore never requires rebuilding framework sources into the website.
-
-## Keyboard and interactions
-
-`Cmd/Ctrl+S` calls `onSaveDraft()`; `Cmd/Ctrl+B/I/U` apply bold, italic, and underline. Link, table, media, and spoiler panels are anchored to their toolbar buttons, close on outside click or `Esc`, and never submit the host form. Panels and emoji popovers are isolated per editor instance.
-
-See [Frontend](frontend.md) and [Community example](moments.md) for complete integrations.
+Connect your parser through `render` for previews. For published content, the application backend decides which sections to return based on the viewer's permissions. See the [community example](moments.md) for Simple's attachment syntax.

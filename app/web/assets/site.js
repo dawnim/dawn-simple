@@ -12,6 +12,7 @@
     const english = {
         黎明: "Dawn", 社区首页: "Home", 搜索: "Search", "搜索主题和内容": "Search topics and posts", 交流板块: "Topics", 灵感在这里相遇: "Where ideas meet", 新动态: "New posts", 新评论: "New replies", 热门贴: "Hot posts", 我发的: "Mine", 全部: "All", 自由交流: "Discussion", 问题求助: "Help", 作品分享: "Showcase", AI趣闻: "AI stories", 社区公约: "Community guidelines", "分享经验，认真提问，友善交流。鲜花送给灵感，鸡蛋留给玩笑": "Share what you learn, ask thoughtful questions, and be kind. Flowers for inspiration; eggs for a little fun", 认识黎明: "Meet Dawn", 本周热议: "Trending this week", 社区足迹: "Community", 主题: "Topics", 成员: "Members", "让每一个想法，都有回响": "Give every idea a voice", "欢迎来到黎明社区": "Welcome to Dawn Community", "登录后参与交流": "Sign in to join the conversation", 标题: "Title", 内容: "Content", "给你的想法起个标题": "Give your idea a title", 添加图片: "Add images", "每天最多发布2条，回复不限": "Up to 2 posts a day, unlimited replies", 暂无热议: "No trending topics yet", 复制链接: "Copy link", 复制: "Copy", 已复制: "Copied", 编辑: "Edit", 草稿已保存: "Draft saved", 发消息: "Message", "期待你的第一条分享": "Be the first to share an idea", "没有找到相关主题": "No matching topics", "清除筛选": "Clear filters", "楼主": "Author", "更早的消息": "Earlier messages", "请登录后查看自己的动态": "Sign in to see your posts",
         使用IP属地: "Use IP region", "发布次数按站点设置，回复不限": "Daily post limit applies; replies are unlimited", "登录后参与聊天": "Sign in to send messages", "暂无消息，来打个招呼吧": "No messages yet. Say hello", 新消息: "New messages",
+        编辑动态: "Edit post", 保存修改: "Save changes", 图库图片: "Gallery images", 上传图片: "Upload images", 搜索图片: "Search images", 移除图片: "Remove image", 正在上传图片: "Uploading images", 暂无图片: "No images",
         网友动态: "Community", "分享此刻，发现有趣的人和事": "Share a moment and discover the community", 发布动态: "New post", 分享你的想法: "Share your thoughts", "添加地点（选填）": "Add a location (optional)", 发布: "Post", 暂无动态: "No posts yet", 评论: "Comments", 回复: "Reply", 删除: "Delete", 发送: "Send", 写下你的评论: "Write a comment", 上一页: "Previous", 下一页: "Next", 返回动态: "All posts", 未知: "Unknown", "请先登录或完善信息": "Please sign in or complete your profile first", "确认删除？": "Delete this?", 鲜花: "Flowers", 鸡蛋: "Eggs", 加载中: "Loading", "AI写动态": "Create with AI", "正在生成": "Generating", "添加图片（最多9张）": "Add images (up to 9)", "最多选择9张图片": "Choose up to 9 images",
         动态: "Moment", 帖子: "Post", 匿名发布: "Post anonymously", 匿名用户: "Anonymous user", 正文: "Write", 实时预览: "Live preview", 预览: "Preview", 进入全屏: "Fullscreen", 退出全屏: "Exit fullscreen", 一级标题: "Heading 1", 二级标题: "Heading 2", 三级标题: "Heading 3", 行内代码: "Inline code", 代码块: "Code block", 无序列表: "Bullet list", 星号列表: "Star list", 有序列表: "Numbered list", 待办列表: "Task list", 左对齐: "Align left", 居中: "Center", 右对齐: "Align right", 插入链接: "Insert link", 链接文字: "Link text", 链接地址: "Link URL", 插入表格: "Insert table", 选择表格行列: "Choose table size", 插入媒体: "Insert media", 填写音频或视频地址: "Enter an audio or video URL", 媒体地址: "Media URL", 插入剧透: "Insert spoiler", 选择剧透样式: "Choose a spoiler style", 可折叠剧透: "Collapsible spoiler", 可折叠剧透说明: "Insert a collapsible spoiler block", 点击遮罩: "Click to reveal", 点击遮罩说明: "Hide the text until it is clicked", 选择表情: "Choose an emoji", Markdown帮助: "Markdown help", 分割线: "Divider", 取消: "Cancel", 插入: "Insert", 关闭: "Close",
         跟随系统: "System theme",
@@ -72,19 +73,6 @@
         link: '<path d="m10 13 4-4m-7 6-1 1a4 4 0 0 0 6 6l4-4a4 4 0 0 0 0-6m1-3 1-1a4 4 0 0 0-6-6L8 6a4 4 0 0 0 0 6"/>',
         trash: '<path d="M3 6h18M9 6V3h6v3m-10 0 1 15h12l1-15M10 10v7m4-7v7"/>',
         logout: '<path d="M10 4H4v16h6m5-12 4 4-4 4m-6-4h14"/>',
-        heading: '<path d="M5 5v14M19 5v14M5 12h14"/>',
-        underline: '<path d="M6 5v5a6 6 0 0 0 12 0V5M5 20h14"/>',
-        strike: '<path d="M6 6c1-2 4-2 6-1 2 1 5 0 6-1M4 12h16M7 18c2 2 5 2 7 1 2-1 3-1 4-1"/>',
-        highlight: '<path d="m7 14 6-6 4 4-6 6H7v-4ZM5 20h14"/>',
-        code: '<path d="m8 8-4 4 4 4M16 8l4 4-4 4M14 5l-4 14"/>',
-        quote: '<path d="M7 17H4v-4a4 4 0 0 1 4-4v3H7v5Zm10 0h-3v-4a4 4 0 0 1 4-4v3h-1v5Z"/>',
-        spoiler: '<path d="M3 12s3-6 9-6 9 6 9 6-3 6-9 6-9-6-9-6Z"/><circle cx="12" cy="12" r="2"/><path d="m4 4 16 16"/>',
-        list: '<path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/>',
-        table: '<rect x="4" y="5" width="16" height="14" rx="1"/><path d="M4 10h16M10 5v14"/>',
-        align: '<path d="M5 6h14M5 10h10M5 14h14M5 18h10"/>',
-        video: '<rect x="3" y="6" width="13" height="12" rx="2"/><path d="m16 10 5-3v10l-5-3"/>',
-        smile: '<circle cx="12" cy="12" r="9"/><path d="M8 14s1 2 4 2 4-2 4-2M9 9h.01M15 9h.01"/>',
-        divider: '<path d="M4 12h16"/><path d="M8 8h8M8 16h8"/>',
         edit: '<path d="M4 20h4L20 8l-4-4L4 16Zm10-14 4 4"/>',
     };
     function icon(name) {
@@ -107,7 +95,7 @@
         $("language").value = language;
         $("close").ariaLabel = t("关闭");
         documentation.title = t("Dawn 文档");
-        momentEditor?.setOptions({ locale: language === "en" ? "en" : "zh" });
+        momentEditor?.setOptions({ locale: language === "en" ? "en" : "zh", placeholder: t("分享你的想法") });
         profile();
         authMode();
         theme();
@@ -298,7 +286,7 @@
             const result = await api("/api/moment-location");
             user = user ? { ...user, region: result.region } : user;
             $("community-region").textContent = result.region === "未知" ? "" : result.region;
-            if (!$("moment-location").value) $("moment-location").value = result.region;
+            if (!editingId && !$("moment-location").value) $("moment-location").value = result.region;
             return result.region;
         } catch {}
     }
@@ -479,23 +467,20 @@
         const engine = window.DawnMomentMarkdown;
         if (!engine) return String(text || "").replace(/\s+/g, " ").trim();
         const node = element("div");
-        node.innerHTML = engine.render(String(text || ""));
+        node.innerHTML = engine.render(String(text || ""), {}, () => ({}));
         node.querySelectorAll("img,video,iframe,audio,table,[data-md-mask]").forEach(item => item.remove());
         return (node.textContent || "").replace(/\s+/g, " ").trim();
     }
-    function renderSafeMarkdown(text, allowMedia = false) {
-        const node = element("div", "markdown-body moment-markdown moment-content");
-        const content = String(text || "").replace(/(?:attachment|upload):\/\/(\d+)/g, (_, id) => momentImageContentURL(id));
+    function renderSafeMarkdown(text, allowMedia, resolveAttachment) {
+        const node = element("div", "markdown-body moment-content");
         const engine = window.DawnMomentMarkdown;
-        if (!engine) { node.textContent = content; return node; }
-        node.innerHTML = engine.render(content, momentConfig.emojis);
+        node.innerHTML = engine.render(text, momentConfig.emojis, resolveAttachment);
         if (allowMedia) {
             engine.enhanceMarkdown(node);
             node.querySelectorAll("img").forEach(image => image.onclick = () => openImageViewer(image.src));
         } else node.querySelectorAll("img,video,iframe,audio,table,details,[data-md-mask]").forEach(item => item.remove());
         return node;
     }
-    function renderMomentContent(row) { return renderSafeMarkdown(row.content, row.format === "post"); }
     function openImageViewer(src) {
         const dialog = $("moment-image-viewer"), image = $("image-viewer-image");
         image.src = src; image.classList.remove("zoomed"); dialog.showModal();
@@ -565,10 +550,17 @@
                     card.append(actions);
                 } else {
                     document.title = `${title} · Dawn`;
-                    card.append(element("h1", "detail-title", title), author(row), renderMomentContent(row));
-                    if (images.length) {
+                    const inline = new Set();
+                    const content = renderSafeMarkdown(row.content, row.format === "post", (attachment) => {
+                        if (!Object.hasOwn(row.image_names || {}, attachment)) return;
+                        inline.add(Number(attachment));
+                        return { url: momentImageURL(row.id, attachment), name: row.image_names[attachment] };
+                    });
+                    card.append(element("h1", "detail-title", title), author(row), content);
+                    const galleryImages = images.filter(image => !inline.has(Number(image)));
+                    if (galleryImages.length) {
                         const gallery = element("div", "moment-images");
-                        for (const image of images) {
+                        for (const image of galleryImages) {
                             const link = element("a"); link.href = momentImageURL(row.id, image); link.onclick = (event) => { event.preventDefault(); openImageViewer(link.href); };
                             const img = element("img"); img.src = link.href; img.alt = ""; img.loading = "lazy"; link.append(img); gallery.append(link);
                         }
@@ -612,7 +604,13 @@
             page = result.meta.page;
             for (const row of result.data) {
                 const item = element("article", "moment-comment"); item.id = `comment-${row.id}`; item.append(author(row));
-                const content = renderSafeMarkdown(row.content, true);
+                const content = renderSafeMarkdown(row.content, true, (attachment) => {
+                    if (!Object.hasOwn(row.image_names || {}, attachment)) return;
+                    return {
+                        url: `/api/moments/${id}/comments/${row.id}/images/${attachment}`,
+                        name: row.image_names[attachment]
+                    };
+                });
                 if (row.reply_id) content.prepend(element("span", "moment-reply", `${t("回复")} ${row.reply_name || "#" + row.reply_id}：`));
                 item.append(content);
                 const actions = element("div", "comment-actions");
@@ -637,12 +635,9 @@
         commentEditor?.destroy();
         commentEditor = window.DawnMomentEditor.create(host, {
             render: renderEditorMarkdown,
-            enhance: (node) => window.DawnMomentMarkdown?.enhanceMarkdown(node),
-            alwaysFull: true,
-            format: "post",
+            enhance: enhanceEditorMarkdown,
             maxLength: 1024,
-            imageTarget: "body",
-            maxImages: 9,
+            pasteImages: true,
             imageLibrary: momentImageLibrary,
             imageUploader: momentImageUploader,
             previewImage: openImageViewer,
@@ -653,8 +648,8 @@
         form.onsubmit = async (event) => {
             event.preventDefault();
             if (!memberRequired()) return;
-            const content = commentEditor.getValue().trim();
-            if (!content) return;
+            const content = commentEditor.getValue();
+            if (!content.trim()) return;
             send.disabled = true;
             try { await api(`/api/moments/${id}/comments`, "POST", { content, reply_id: reply }); commentEditor.setValue(""); reply = 0; hint.textContent = ""; cancel.hidden = true; await loadMoments(); }
             catch (error) { $("moment-error").textContent = error.message; }
@@ -668,7 +663,7 @@
         const button = $("moment-ai"); button.disabled = true; button.textContent = t("正在生成");
         try {
             const result = await api("/api/moment-drafts", "POST", { path: location.pathname });
-            setMomentFormat("moment"); momentEditor.setValue(result.content); $("moment-title").value = result.content.split("\n")[0].slice(0, 60); $("moment-board").value = "ai"; $("moment-form-error").textContent = ""; $("moment-dialog").showModal();
+            openNewMoment(); momentEditor.setValue(result.content); $("moment-title").value = result.content.split("\n")[0].slice(0, 60); $("moment-board").value = "ai"; saveMomentDraft();
         } catch (error) { alert(error.message); }
         finally { button.disabled = false; button.textContent = t("AI写动态"); }
     };
@@ -803,40 +798,58 @@
         $("community-chat").hidden = true; $("nav-chat-unread").hidden = true;
         if (user) void connectCommunity(chatVersion);
     }
-    $("moment-compose").onclick = () => { if (memberRequired()) { $("moment-form-error").textContent = ""; editingId = 0; clearComposeImages(); setMomentFormat("moment"); void loadCommunityRegion(); $("moment-dialog").showModal(); } };
-    let momentFormat = "moment", editingId = 0, currentImages = [];
+    $("moment-compose").onclick = () => { if (memberRequired()) openNewMoment(); };
+    let momentFormat = "moment", editingId = 0, currentImages = [], openingMoment = 0;
+    let loadingForm = false, galleryVersion = 0, galleryUploading = false, gallerySearchVersion = 0;
+    let editingImageNames = {};
+    const imageMetadata = new Map();
     const draftKey = "dawn.moment.drafts";
-    let momentDrafts = (() => { try { return JSON.parse(localStorage.getItem(draftKey)) || {}; } catch { return {}; } })();
-    momentDrafts.moment ||= {}; momentDrafts.post ||= {};
+    const momentDrafts = (() => { try { return JSON.parse(localStorage.getItem(draftKey)) || {}; } catch { return {}; } })();
     function saveMomentDraft() {
-        momentDrafts[momentFormat] = { title: $("moment-title").value, content: $("moment-content").value, board: $("moment-board").value, location: $("moment-location").value, anonymous: $("moment-anonymous").checked };
+        if (editingId || loadingForm) return;
+        momentDrafts[momentFormat] = { title: $("moment-title").value, content: momentEditor.getValue(), board: $("moment-board").value, location: $("moment-location").value, is_anonymous: $("moment-anonymous").checked };
         localStorage.setItem(draftKey, JSON.stringify(momentDrafts));
     }
     function momentImageContentURL(id) { return `/api/moment-images/${id}/content`; }
-    // 动态正文只放文字与 md 格式，图片/视频一律走编辑器下方附件区。
     function editorConfig() {
         const hidden = [...(momentConfig.toolbar_hidden || [])];
         if (momentFormat === "moment") hidden.push("image", "media");
         return { hidden };
     }
-    function renderEditorMarkdown(text) {
-        const content = String(text || "").replace(/(?:attachment|upload):\/\/(\d+)/g, (_, id) => momentImageContentURL(id));
-        const engine = window.DawnMomentMarkdown;
-        return engine ? engine.render(content, momentConfig.emojis) : content;
+    function renderEditorMarkdown(text, post = 0, names = {}) {
+        return window.DawnMomentMarkdown.render(text, momentConfig.emojis, id =>
+            Object.hasOwn(names, id)
+                ? { url: momentImageURL(post, id), name: names[id] }
+                : { url: momentImageContentURL(id) });
+    }
+    function enhanceEditorMarkdown(root) {
+        window.DawnMomentMarkdown.enhanceMarkdown(root);
+        root.querySelectorAll("img[data-moment-attachment]").forEach(img => {
+            const id = img.dataset.momentAttachment;
+            if (img.alt) return;
+            if (!imageMetadata.has(id)) {
+                imageMetadata.set(id, api(`/api/moment-images/${id}`).catch(() => {
+                    imageMetadata.delete(id);
+                    return null;
+                }));
+            }
+            imageMetadata.get(id).then(row => { if (img.isConnected && row?.name) img.alt = row.name; });
+        });
     }
     async function fingerprint(file) {
         const bytes = await file.arrayBuffer();
         const sha256 = [...new Uint8Array(await crypto.subtle.digest("SHA-256", bytes))].map(value => value.toString(16).padStart(2, "0")).join("");
         return { md5: SparkMD5.ArrayBuffer.hash(bytes), sha256 };
     }
-    // 选完立即上传：先查秒传，命中直接用已有 id，未命中才真正 POST。
     const momentImageUploader = {
         fingerprint,
+        toMarkdown: image => `[attachment://${image.id}]`,
         check: async (files, prints) => {
             const hits = [];
             for (let i = 0; i < files.length; i++) {
                 const result = await api("/api/moment-image-checks", "POST", { name: files[i].name, size: files[i].size, ...prints[i] });
-                hits.push(result.exists ? { id: result.id, url: momentImageContentURL(result.id), name: files[i].name } : null);
+                if (result.exists) imageMetadata.set(String(result.id), Promise.resolve(result));
+                hits.push(result.exists ? { id: result.id, url: momentImageContentURL(result.id), name: result.name } : null);
             }
             return hits;
         },
@@ -847,7 +860,8 @@
                 const response = await fetch("/api/moment-images", { method: "POST", headers: { Authorization: `Bearer ${token}`, "Accept-Language": language }, body });
                 const result = await response.json();
                 if (!response.ok) throw new Error(result.message || t("请求失败"));
-                rows.push({ id: result.data.id, url: momentImageContentURL(result.data.id), name: files[i].name });
+                imageMetadata.set(String(result.data.id), Promise.resolve(result.data));
+                rows.push({ id: result.data.id, url: momentImageContentURL(result.data.id), name: result.data.name });
             }
             return rows;
         }
@@ -855,59 +869,142 @@
     const momentImageLibrary = {
         list: async (keyword) => {
             const rows = await api(`/api/moment-images/mine?keyword=${encodeURIComponent(keyword || "")}`);
-            return (rows || []).map(row => ({ id: row.id, url: row.url, name: row.name }));
+            for (const row of rows || []) imageMetadata.set(String(row.id), Promise.resolve(row));
+            return rows || [];
         }
     };
-    function clearComposeImages() { currentImages = []; momentEditor.setImages([]); }
-    function setMomentFormat(format) {
-        saveMomentDraft(); momentFormat = format;
-        const draft = momentDrafts[format];
-        $("format-moment").classList.toggle("active", format === "moment");
-        $("format-post").classList.toggle("active", format === "post");
-        $("moment-title-field").hidden = format !== "post";
-        $("moment-anonymous-field").hidden = format !== "post";
-        $("moment-title").value = draft.title || "";
-        $("moment-board").value = draft.board || "general";
-        $("moment-location").value = draft.location || $("moment-location").value;
-        $("moment-anonymous").checked = !!draft.anonymous;
-        momentEditor.setValue(draft.content || "");
-        momentEditor.setOptions({
-            locale: language === "en" ? "en" : "zh", format,
-            maxLength: format === "post" ? 10000 : 1024,
-            imageTarget: format === "post" ? "choose" : "gallery",
-            config: editorConfig
-        });
+    function renderGallery() {
+        $("moment-image-preview").replaceChildren(...currentImages.map(id => {
+            const cell = element("div", "gallery-cell");
+            const image = element("img"); image.src = editingId ? momentImageURL(editingId, id) : momentImageContentURL(id); image.alt = "";
+            if (editingId) image.onerror = () => { image.onerror = null; image.src = momentImageContentURL(id); };
+            const preview = element("button"); preview.type = "button"; preview.title = t("预览");
+            preview.append(image); preview.onclick = () => openImageViewer(image.src);
+            const remove = element("button", "gallery-remove", "×"); remove.type = "button";
+            remove.title = t("移除图片"); remove.ariaLabel = remove.title;
+            remove.onclick = () => { currentImages = currentImages.filter(item => item !== id); renderGallery(); };
+            cell.append(preview, remove);
+            return cell;
+        }));
     }
-    function openMomentEditor(row) {
-        editingId = row.id;
-        const existing = JSON.parse(row.images || "[]") || [];
-        momentEditor.setImages(existing.map(id => ({ id, url: momentImageContentURL(id) })));
-        $("moment-form-error").textContent = "";
-        setMomentFormat(row.format || "post");
+    function addGalleryImages(ids) {
+        const next = [...new Set([...currentImages, ...ids])];
+        if (next.length > 9) throw new Error(t("最多选择9张图片"));
+        currentImages = next;
+        renderGallery();
+    }
+    async function loadGallery() {
+        const version = ++gallerySearchVersion;
+        const host = $("moment-gallery-library"), status = $("moment-gallery-status");
+        host.replaceChildren(); status.textContent = t("加载中");
+        try {
+            const rows = await momentImageLibrary.list($("moment-gallery-search").value.trim());
+            if (version !== gallerySearchVersion) return;
+            status.textContent = rows.length ? "" : t("暂无图片");
+            for (const row of rows) {
+                const button = element("button"); button.type = "button"; button.title = row.name;
+                const image = element("img"); image.src = row.url; image.alt = row.name;
+                button.append(image);
+                button.onclick = () => {
+                    try { addGalleryImages([row.id]); $("moment-gallery").close(); }
+                    catch (error) { status.textContent = error.message; }
+                };
+                host.append(button);
+            }
+        } catch (error) { if (version === gallerySearchVersion) status.textContent = error.message; }
+    }
+    $("moment-gallery-open").onclick = () => {
+        $("moment-gallery-search").value = "";
+        $("moment-gallery").showModal();
+        void loadGallery();
+    };
+    $("moment-gallery-close").onclick = () => $("moment-gallery").close();
+    $("moment-gallery-search").onkeydown = event => {
+        if (event.key === "Enter") { event.preventDefault(); void loadGallery(); }
+    };
+    $("moment-gallery-search").oninput = () => void loadGallery();
+    $("moment-gallery-upload").onclick = () => $("moment-gallery-files").click();
+    $("moment-gallery-files").onchange = async event => {
+        const files = Array.from(event.target.files); event.target.value = "";
+        if (!files.length || galleryUploading) return;
+        const status = $("moment-gallery-status"), version = galleryVersion;
+        galleryUploading = true; $("moment-gallery-upload").disabled = true;
+        try {
+            if (files.length + currentImages.length > 9) throw new Error(t("最多选择9张图片"));
+            status.textContent = t("正在上传图片");
+            const prints = await Promise.all(files.map(fingerprint));
+            const hits = await momentImageUploader.check(files, prints);
+            const missing = files.filter((_, index) => !hits[index]);
+            const uploaded = await momentImageUploader.upload(missing, prints.filter((_, index) => !hits[index]));
+            if (version !== galleryVersion) return;
+            addGalleryImages(hits.map(hit => (hit || uploaded.shift()).id));
+            $("moment-gallery").close();
+        } catch (error) { if (version === galleryVersion) status.textContent = error.message; }
+        finally { galleryUploading = false; $("moment-gallery-upload").disabled = false; }
+    };
+    function setMomentFormat(format) {
+        momentFormat = format;
+        const post = format === "post";
+        $("format-moment").classList.toggle("active", !post);
+        $("format-post").classList.toggle("active", post);
+        $("moment-title-field").hidden = !post;
+        $("moment-anonymous-field").hidden = !post;
+        momentEditor.setOptions({ maxLength: post ? 10000 : 1024, pasteImages: post, config: editorConfig });
+    }
+    function loadComposeFields(row) {
+        loadingForm = true;
         $("moment-title").value = row.title || "";
-        momentEditor.setValue(row.content || "");
         $("moment-board").value = row.board || "general";
         $("moment-location").value = row.location || "";
         $("moment-anonymous").checked = !!row.is_anonymous;
+        momentEditor.setValue(row.content || "");
+        loadingForm = false;
+    }
+    function showCompose() {
+        for (const [node, label] of [[$("moment-dialog-title"), editingId ? "编辑动态" : "发布动态"], [$("moment-submit"), editingId ? "保存修改" : "发布"]]) {
+            node.dataset.t = label;
+            node.textContent = t(label);
+        }
+        $("moment-publish-note").hidden = !!editingId;
+        $("moment-form-error").textContent = "";
+        renderGallery();
         $("moment-dialog").showModal();
     }
-    $("format-moment").onclick = () => setMomentFormat("moment"); $("format-post").onclick = () => setMomentFormat("post");
-    // 官网只注入业务能力：渲染方言、图库/秒传上传、@ 候选、后台配置、图片查看、草稿。
-    // 隐藏工具栏媒体按钮、动态也用完整编辑器、图片落点等都属于 simple 的用法，不是内核分支。
+    function openNewMoment() {
+        ++openingMoment;
+        ++galleryVersion;
+        editingId = 0; editingImageNames = {}; currentImages = [];
+        setMomentFormat("moment");
+        loadComposeFields(momentDrafts.moment || {});
+        showCompose();
+        void loadCommunityRegion();
+    }
+    async function openMomentEditor(row) {
+        const version = ++openingMoment;
+        row = await api(`/api/moments/${row.id}`);
+        if (version !== openingMoment) return;
+        ++galleryVersion;
+        editingId = row.id;
+        editingImageNames = row.image_names || {};
+        currentImages = JSON.parse(row.images || "[]") || [];
+        setMomentFormat(row.format || "post");
+        loadComposeFields(row);
+        showCompose();
+    }
+    for (const format of ["moment", "post"]) {
+        $(`format-${format}`).onclick = () => {
+            if (format === momentFormat) return;
+            saveMomentDraft();
+            setMomentFormat(format);
+            if (!editingId) loadComposeFields(momentDrafts[format] || {});
+        };
+    }
     momentEditor = window.DawnMomentEditor.create($("moment-editor-shell"), {
-        render: renderEditorMarkdown,
-        enhance: (node) => window.DawnMomentMarkdown?.enhanceMarkdown(node),
-        alwaysFull: true,
-        attachmentHost: $("moment-image-preview"),
+        render: text => renderEditorMarkdown(text, editingId, editingImageNames),
+        enhance: enhanceEditorMarkdown,
         imageLibrary: momentImageLibrary,
         imageUploader: momentImageUploader,
-        imageTarget: "gallery",
-        maxImages: 9,
-        onImagesChange: (ids) => { currentImages = ids; },
-        customTools: [{
-            key: "my-images", title: ["我的图片", "My images"], icon: "image", where: "attachments",
-            onClick: ({ editor, anchor }) => editor.openImageLibrary(anchor)
-        }],
+        mediaMarkup: (url, type) => `MEDIA::${type}::${url}`,
         mentions: async (query) => {
             const rows = await api(`/api/mentions/search?q=${encodeURIComponent(query)}`);
             return (rows || []).map((row) => ({ label: `${row.nickname || row.unique_id} · ${row.unique_id}`, value: row.unique_id }));
@@ -915,9 +1012,9 @@
         config: editorConfig,
         previewImage: openImageViewer,
         onChange: saveMomentDraft,
-        onSaveDraft: () => { saveMomentDraft(); $("moment-form-error").textContent = t("草稿已保存"); },
+        onSaveDraft: () => { saveMomentDraft(); if (!editingId) $("moment-form-error").textContent = t("草稿已保存"); },
         locale: language === "en" ? "en" : "zh",
-        format: "moment",
+        placeholder: t("分享你的想法"),
         maxLength: 1024
     });
     for (const [value, [label]] of Object.entries(boards)) { const option = element("option", "", t(label)); option.value = value; option.dataset.t = label; $("moment-board").append(option); }
@@ -925,20 +1022,29 @@
         try { const result = await api("/api/moment-location"); $("moment-location").value = t(result.region); }
         catch (error) { $("moment-form-error").textContent = error.message; }
     };
-    $("moment-close").onclick = () => { if (editingId) { editingId = 0; clearComposeImages(); momentDrafts = { moment: {}, post: {} }; localStorage.removeItem(draftKey); } $("moment-dialog").close(); };
+    $("moment-close").onclick = () => $("moment-dialog").close();
+    $("moment-dialog").addEventListener("close", () => {
+        ++galleryVersion;
+        editingId = 0;
+        editingImageNames = {};
+        currentImages = [];
+        loadingForm = true;
+        momentEditor.setValue("");
+        loadingForm = false;
+    });
     $("moment-form").onsubmit = async (event) => {
-        event.preventDefault(); const button = event.submitter; button.disabled = true;
+        event.preventDefault();
+        const button = $("moment-submit"), id = editingId;
+        if (button.disabled || galleryUploading || $("moment-gallery").open) return;
+        button.disabled = true;
         try {
-            const content = $("moment-content").value;
-            if (momentFormat === "moment" && /!\[[^\]]*\]\(|<img\b|<video\b|<iframe\b|MEDIA::/i.test(content)) throw new Error(t("动态正文不能包含图片或视频"));
-            if (currentImages.length > 9) throw new Error(t("最多选择9张图片"));
-            const payload = { format: momentFormat, content, title: $("moment-title").value, board: $("moment-board").value, location: $("moment-location").value, images: currentImages, is_anonymous: $("moment-anonymous").checked };
-            const row = editingId ? await api(`/api/moments/${editingId}`, "PUT", payload) : await api("/api/moments", "POST", payload);
-            const target = editingId || row.id;
-            clearComposeImages(); editingId = 0;
-            momentDrafts = { moment: {}, post: {} }; localStorage.removeItem(draftKey);
-            $("moment-form").reset(); setMomentFormat("moment"); $("moment-dialog").close(); navigate(`/moments/${target}`);
-        } catch (error) { $("moment-form-error").textContent = error.message; } finally { button.disabled = false; }
+            const payload = { format: momentFormat, content: momentEditor.getValue(), title: $("moment-title").value, board: $("moment-board").value, location: $("moment-location").value, images: currentImages, is_anonymous: $("moment-anonymous").checked };
+            const row = id ? await api(`/api/moments/${id}`, "PUT", payload) : await api("/api/moments", "POST", payload);
+            if (!id) { delete momentDrafts[momentFormat]; localStorage.setItem(draftKey, JSON.stringify(momentDrafts)); }
+            $("moment-dialog").close();
+            navigate(`/moments/${id || row.id}`);
+        } catch (error) { $("moment-form-error").textContent = error.message; }
+        finally { button.disabled = false; }
     };
     (async () => {
         try {

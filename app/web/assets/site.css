@@ -333,6 +333,27 @@ textarea:focus,
 select:focus {
     border-color: var(--accent);
 }
+.site-select {
+    appearance: none;
+    min-height: 40px;
+    padding-inline-end: 30px;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'%3E%3Cpath fill='none' stroke='%237d8798' stroke-width='1.5' d='m3 5 4 4 4-4'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+}
+.site-select:hover { border-color: var(--accent); }
+.site-select:focus-visible, .gallery-add:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.compose-dialog select.site-select { padding-inline-end: 28px; }
+@supports (appearance: base-select) and selector(::picker(select)) {
+    .site-select, .site-select::picker(select) { appearance: base-select; }
+    .site-select { align-items: center; }
+    .site-select::picker-icon { display: none; }
+    .site-select::picker(select) { margin-top: 4px; padding: 4px; border: 1px solid var(--line); border-radius: 9px; background: var(--panel); color: var(--text); box-shadow: 0 7px 22px #0002; }
+    .site-select option { gap: 8px; min-height: 34px; padding: 5px 8px; border-radius: 6px; font-size: 13px; }
+    .site-select option:checked { color: var(--accent); }
+    .site-select option:is(:hover, :focus-visible) { background: var(--bg); }
+}
 #submit {
     width: 100%;
 }
@@ -480,7 +501,6 @@ html[data-page="home"] body > .moments { display: none; }
 .moment-content { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 14px; line-height: 1.9; margin: 24px 0; }
 .moment-markdown { margin: 24px 0; font-size: 14px; line-height: 1.8; }
 .moment-markdown-image { max-width: 100%; border-radius: 8px; cursor: zoom-in; }
-.moment-markdown pre, .markdown-preview pre { max-width: 100%; overflow: auto; padding: 12px 14px; border-radius: 8px; background: color-mix(in srgb, var(--text) 7%, var(--panel)); }
 .moment-markdown pre code, .markdown-preview pre code { font: 12px/1.7 ui-monospace, SFMono-Regular, Consolas, monospace; }
 .moment-markdown u, .markdown-preview u { text-decoration: underline; text-underline-offset: 3px; }
 .moment-align.left { text-align: left; }
@@ -523,118 +543,27 @@ html[data-page="home"] body > .moments { display: none; }
 .compose-row { display: flex; gap: 16px; }
 .compose-row label:first-child { width: 124px; flex-shrink: 0; }
 .compose-title { flex: 1; min-width: 0; }
-.compose-dialog :is(input, select, textarea) { width: 100%; padding: 9px 11px; font-size: 13px; }
+.compose-dialog :is(input, select) { width: 100%; padding: 9px 11px; font-size: 13px; }
 .compose-dialog textarea { resize: none; }
-.compose-editor-shell { display: flex; flex: 1; min-height: 180px; flex-direction: column; border: 1px solid var(--line); border-radius: 11px; background: var(--panel); }
-.compose-editor-shell.post { box-shadow: 0 2px 12px #0000000a; }
-.compose-editor-shell.fullscreen { position: fixed; z-index: 30; inset: 16px; background: var(--panel); box-shadow: 0 20px 80px #0005; }
-.editor-head { display: flex; align-items: center; gap: 14px; min-height: 42px; padding: 0 12px; border-bottom: 1px solid var(--line); }
-.editor-tabs { display: flex; align-items: stretch; gap: 18px; height: 42px; }
-.editor-tabs button { position: relative; padding: 0 2px; color: var(--muted); font-size: 12px; }
-.editor-tabs button.active { color: var(--text); font-weight: 600; }
-.editor-tabs button.active::after { position: absolute; right: 0; bottom: 0; left: 0; height: 2px; background: var(--text); content: ""; }
-#moment-length { margin-left: auto; color: var(--muted); font-size: 11px; }
-.editor-icon { display: grid; place-items: center; width: 28px; height: 28px; border: 1px solid var(--line); border-radius: 50%; color: var(--muted); font-size: 15px; }
-.compose-editor { display: block; flex: 1; min-height: 0; }
-.compose-editor.post { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); gap: 0; }
-.compose-editor-shell.view-write .compose-editor.post, .compose-editor-shell.view-preview .compose-editor.post { display: block; }
-.compose-editor textarea { height: 100%; min-height: 0; overflow-y: auto; resize: none; border: 0 !important; border-radius: 0 !important; outline: 0; }
-.compose-editor.post textarea { border-right: 1px solid var(--line) !important; }
-.markdown-preview { height: 100%; min-height: 0; overflow-y: auto; padding: 11px; border: 1px solid var(--line); border-radius: 7px; background: var(--bg); font-size: 13px; line-height: 1.75; }
-.compose-editor.post .markdown-preview { border: 0; border-radius: 0; }
-.markdown-preview:empty::before { content: "预览"; color: var(--muted); }
-.editor-toolbar { display: flex; flex-wrap: nowrap; align-items: center; gap: 3px; min-height: 42px; overflow-x: auto; overscroll-behavior-x: contain; padding: 5px 12px; border-top: 1px solid var(--line); color: var(--muted); }
-.editor-toolbar::-webkit-scrollbar { display: none; }
-.editor-toolbar > .editor-tool, .editor-toolbar > .editor-tool-dropdown { flex: 0 0 auto; }
-.editor-tool-dropdown { position: relative; }
-.editor-toolbar button { color: inherit; font-size: 12px; }
-.editor-tool { display: inline-flex; align-items: center; justify-content: center; min-width: 28px; height: 30px; padding: 0 5px; border-radius: 7px; color: inherit; line-height: 1; vertical-align: middle; }
-.editor-tool:hover, .editor-tool-dropdown:focus-within > .editor-tool, .editor-tool.active { background: var(--bg); color: var(--text); }
-.editor-tool-dropdown > .editor-tool { gap: 3px; }
-.editor-tool-dropdown > .editor-tool i { margin-left: 1px; color: var(--muted); font-size: 10px; font-style: normal; }
-.editor-heading-label { font: 12px/1 ui-monospace, SFMono-Regular, Consolas, monospace; }
-.editor-tooltip { position: fixed; z-index: 100; display: grid; gap: 3px; min-width: 150px; max-width: 240px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--text); box-shadow: 0 10px 30px #0003; pointer-events: none; font-size: 11px; }
-.editor-tooltip strong { font-size: 12px; }
-.editor-tooltip kbd { width: fit-content; padding: 1px 4px; border: 1px solid var(--line); border-radius: 4px; color: var(--muted); font: 10px ui-monospace, SFMono-Regular, Consolas, monospace; }
-.editor-tooltip small { color: var(--muted); line-height: 1.4; }
-.editor-toolbar svg { width: 17px; height: 17px; }
-.editor-menu { position: absolute; z-index: 40; top: calc(100% + 6px); left: 0; display: none; min-width: 132px; padding: 5px; border: 1px solid var(--line); border-radius: 9px; background: var(--panel); box-shadow: 0 12px 35px #0002; }
-.editor-menu.open { display: grid; gap: 2px; }
-.editor-menu button { display: flex; justify-content: space-between; align-items: center; width: 100%; min-height: 30px; padding: 6px 9px; border-radius: 6px; text-align: left; white-space: nowrap; }
-.editor-menu button:hover { background: var(--bg); color: var(--text); }
-.editor-menu button.active { background: var(--bg); color: var(--text); }
-/* 原版 Rhex：四项是锚定工具栏的浮层，只有 Markdown 帮助是模态 dialog。 */
-.editor-panel { position: fixed; z-index: 10000; width: 292px; max-width: calc(100vw - 24px); padding: 16px; overflow-y: auto; border: 1px solid var(--line); border-radius: 16px; background: var(--panel); color: var(--text); box-shadow: 0 18px 50px #0003; }
-.editor-panel[hidden] { display: none; }
-.editor-panel :where(button) { cursor: pointer; border: 0; background: transparent; color: inherit; font: inherit; }
-.editor-panel :where(input) { box-sizing: border-box; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--text); font: inherit; outline: 0; }
-.editor-panel :where(input):focus { border-color: var(--accent); }
-.editor-help-dialog::backdrop { background: #0004; }
-.editor-help-dialog .dialog-head { margin-bottom: 16px; }
-.editor-popover-head { display: grid; gap: 4px; margin-bottom: 12px; }
-.editor-popover-head strong { font-size: 13px; font-weight: 600; }
-.editor-popover-head small { color: var(--muted); font-size: 11px; line-height: 1.6; }
-.editor-popover-fields { display: grid; gap: 8px; }
-.editor-popover-fields input { width: 100%; padding: 8px 10px; font-size: 12px; }
-.editor-popover-hint { min-height: 15px; margin: 8px 0 0; color: var(--muted); font-size: 11px; line-height: 1.6; }
-.editor-panel p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.7; }
-.editor-panel-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 12px; }
-.editor-panel-actions button { min-height: 30px; padding: 4px 12px; border-radius: 999px; font-size: 12px; }
-.editor-popover-cancel { border: 1px solid var(--line); color: var(--muted); }
-.editor-popover-cancel:hover { background: var(--bg); color: var(--text); }
-.editor-panel-actions button.primary { border: 1px solid var(--text); background: var(--text); color: var(--panel); }
-.editor-panel-actions button.primary:disabled { opacity: .4; cursor: not-allowed; }
-.editor-table-grid { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 4px; margin-top: 12px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: color-mix(in srgb, var(--text) 4%, transparent); }
-.editor-table-grid .editor-table-cell { aspect-ratio: 1; border: 1px solid var(--line); border-radius: 6px; background: transparent; cursor: pointer; }
-.editor-table-grid .editor-table-cell:hover, .editor-table-grid .editor-table-cell:focus-visible { border-color: var(--accent); }
-.editor-table-grid .editor-table-cell.selected { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 30%, var(--panel)); }
-.editor-table-size { display: inline-flex; align-items: center; gap: 6px; margin-right: auto; color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
-.editor-table-size svg { width: 14px; height: 14px; }
-.editor-choice-list { display: grid; gap: 8px; margin-top: 10px; }
-.editor-choice-list button { display: grid; gap: 3px; padding: 12px; border: 1px solid var(--line); border-radius: 8px; text-align: left; }
-.editor-choice-list button:hover { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--panel)); }
-.editor-choice-list strong { font-size: 13px; }
-.editor-choice-list small { color: var(--muted); font-size: 11px; }
-.editor-help-dialog { width: min(820px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); padding: 22px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); color: var(--text); box-shadow: 0 18px 70px #0003; scrollbar-width: none; }
-.editor-help-dialog::-webkit-scrollbar { display: none; }
-.editor-help-content { line-height: 1.75; }
-.editor-help-content h1 { margin: 0 0 14px; font-size: 20px; }
-.editor-help-content h2 { margin: 22px 0 8px; font-size: 15px; }
-.editor-help-content blockquote { margin: 0; padding: 10px 12px; border-left: 3px solid var(--accent); background: var(--bg); color: var(--muted); font-size: 12px; }
-.editor-help-markdown { color: var(--muted); font-size: 12px; }
-.editor-help-markdown table { width: 100%; border-collapse: collapse; }
-.editor-help-markdown th, .editor-help-markdown td { padding: 6px 8px; border: 1px solid var(--line); text-align: left; }
-.editor-help-markdown pre { position: relative; padding: 12px; border-radius: 8px; background: var(--bg); overflow: auto; }
-.editor-copy { position: absolute; top: 7px; right: 7px; min-height: 24px; padding: 2px 8px; border: 1px solid var(--line); border-radius: 5px; background: var(--panel); color: var(--muted); font-size: 10px; }
-.editor-copy:hover { color: var(--text); }
-.compose-editor { position: relative; }
-.editor-lines { position: absolute; z-index: 1; top: 0; bottom: 0; left: 0; width: 40px; padding: 11px 8px; overflow: hidden; border-right: 1px solid var(--line); background: var(--bg); color: var(--muted); font: 12px/1.75 ui-monospace, Consolas, monospace; text-align: right; white-space: pre; pointer-events: none; }
-.compose-editor-shell:not(.post) .editor-lines, .compose-editor-shell.view-preview .editor-lines, .compose-editor-shell.view-live .editor-lines { display: none; }
-.compose-editor.post textarea { padding-left: 52px; font: 13px/1.75 ui-monospace, Consolas, monospace; }
-.editor-selection-bar { position: fixed; z-index: 10000; display: flex; gap: 2px; padding: 3px; border: 1px solid var(--line); border-radius: 18px; background: var(--panel); box-shadow: 0 12px 32px #0003; }
-.editor-selection-bar button { min-width: 26px; height: 26px; border-radius: 5px; color: var(--text); font-size: 12px; }
-.editor-selection-bar button:hover { background: var(--bg); }
-.editor-selection-bar[hidden], .editor-mention-panel[hidden] { display: none; }
-.editor-mention-panel { position: absolute; z-index: 6; top: 40px; left: 60px; display: grid; min-width: 220px; max-height: 220px; overflow: auto; padding: 5px; border: 1px solid var(--line); border-radius: 9px; background: var(--panel); box-shadow: 0 12px 32px #0002; }
-.editor-mention { padding: 7px 9px; border-radius: 6px; color: var(--text); font-size: 12px; text-align: left; }
-.editor-mention:hover { background: var(--bg); }
 .compose-check { display: inline-flex; flex-direction: row; align-items: center; gap: 7px; margin: 12px 0 0; color: var(--muted); font-size: 12px; }
 .compose-check input { width: auto !important; }
-.compose-tools { display: flex; justify-content: flex-end; align-items: center; color: var(--muted); font-size: 11px; margin-top: -6px; }
-.image-picker { position: relative; display: inline-flex; flex-direction: row; align-items: center; gap: 7px; margin: 0; padding: 6px 0; color: var(--accent); cursor: pointer; overflow: hidden; }
-.image-picker input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
-.compose-images { display: flex; flex-wrap: wrap; gap: 8px; max-height: 84px; overflow-y: auto; margin: 10px 0; }
-.compose-images:empty { display: none; }
-.compose-images img, .image-add { width: 64px; height: 64px; border-radius: 8px; object-fit: cover; }
-.image-add { position: relative; display: grid; place-items: center; border: 1px dashed var(--line); color: var(--muted); cursor: pointer; }
-.image-add:hover { color: var(--accent); border-color: var(--accent); }
-.image-add input { position: absolute; inset: 0; width: 100% !important; height: 100%; opacity: 0; cursor: pointer; }
-/* 内核接管的附件区：媒体统一在编辑器下方（微信式），不占正文字数。 */
-#moment-image-preview.editor-attachments { max-height: none; overflow: visible; margin: 10px 0; }
-#moment-image-preview.editor-attachments .editor-attachment img { cursor: zoom-in; }
-/* 评论也使用完整编辑器：避免旧 textarea 规则把编辑区撑坏。 */
-.comment-editor-shell .compose-editor-shell { min-height: 150px; }
-.moment-comment-form .compose-editor-shell textarea { width: auto; resize: none; font-size: inherit; }
+.compose-gallery { margin-top: 12px; }
+.gallery-label { color: var(--muted); font-size: 12px; }
+.compose-images, .gallery-library { display: flex; flex-wrap: wrap; gap: 8px; }
+.compose-images:not(:empty) { margin: 6px 0; }
+.compose-images { flex-wrap: nowrap; overflow-x: auto; }
+.gallery-cell { flex: none; }
+.gallery-cell { position: relative; }
+.gallery-cell > button:first-child, .gallery-library > button { display: block; padding: 0; border-radius: 8px; }
+.gallery-cell img, .gallery-library img { display: block; width: 58px; height: 58px; object-fit: cover; border: 1px solid var(--line); border-radius: 8px; }
+.gallery-remove { position: absolute; inset: 2px 2px auto auto; border-radius: 50%; width: 20px; height: 20px; padding: 0; background: #000a; color: white; }
+.gallery-add { min-height: 32px; margin-top: 6px; padding: 4px 10px; border: 1px dashed var(--line); border-radius: 8px; color: var(--accent); }
+.gallery-dialog { width: min(460px, calc(100vw - 24px)); max-height: 85dvh; overflow: auto; }
+.gallery-actions { display: flex; align-items: center; gap: 8px; }
+.gallery-actions input { min-width: 0; }
+.gallery-actions button { flex: none; }
+.gallery-dialog [hidden] { display: none; }
+.comment-editor-shell { display: flex; min-height: 150px; }
 .comment-reply-hint { margin-right: auto; align-self: center; color: var(--muted); font-size: 12px; }
 .compose-location { flex-direction: row; align-items: center; gap: 8px; color: var(--muted); margin: 14px 0 0; }
 .compose-location input { border: 0; background: transparent; padding: 5px 0; }
@@ -686,7 +615,7 @@ html[data-page="home"] body > .moments { display: none; }
     .logo { width: 28px; height: 28px; }
     .nav-actions { grid-area: actions; margin: 0; gap: 3px; font-size: 12px; }
     .theme-toggle { width: 28px; height: 28px; }
-    .nav-actions select { max-width: 62px; padding: 0; border: 0; }
+    .nav-actions .site-select { min-height: 36px; padding-inline: 5px 19px; background-position: right 4px center; }
     .forum-search { grid-area: search; order: 0; width: 100%; margin: 0; }
     .forum-search input { padding: 6px 0; }
     .moments { display: block; padding: 14px 14px 40px; }
@@ -721,11 +650,8 @@ html[data-page="home"] body > .moments { display: none; }
     .compose-dialog { inset: 0; width: 100%; max-width: none; height: 100dvh; max-height: none; margin: 0; padding: 16px; border: 0; border-radius: 0; overflow: hidden; }
     .compose-dialog .dialog-head { margin-bottom: 12px; }
     .compose-format { margin-bottom: 10px; }
-    .compose-editor-shell { min-height: 150px; }
     .compose-row { gap: 12px; }
     .compose-row label:first-child { width: 108px; }
-    .compose-editor.post { grid-template-columns: minmax(0, 1fr); grid-template-rows: repeat(2, minmax(0, 1fr)); }
-    .compose-editor .markdown-preview { margin-top: 0; min-height: 0; }
     .community-chat { inset: 0; width: 100%; height: 100dvh; border: 0; border-radius: 0; }
     .chat-list { width: 100px; }
     .chat-list button { padding: 14px 10px; font-size: 12px; }
@@ -738,7 +664,6 @@ html[data-page="home"] body > .moments { display: none; }
     .compose-format { margin-bottom: 8px; }
     .compose-location { margin-top: 6px; }
     .compose-footer { padding-top: 8px; }
-    .editor-menu { top: auto; bottom: calc(100% + 6px); }
 }
 @media (max-width: 760px) {
     .compose-dialog { overflow: hidden; }

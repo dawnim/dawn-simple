@@ -17,14 +17,13 @@
       <template #content="{ form }">
         <MomentEditor
           v-model="form.content"
-          v-model:images="form.images"
           :format="form.format"
           :record-id="form.id"
           :hidden="hiddenTools"
         />
       </template>
       <template #images="{ form }">
-        <MomentImages v-model="form.images" :record-id="form.id" />
+        <MomentImages v-model="form.images" />
       </template>
     </CrudPage>
     <CommentDialog v-if="current" v-model="commentVisible" :moment="current" />

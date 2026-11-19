@@ -35,7 +35,7 @@
             <div class="nav-actions">
                 <a id="nav-dawn" href="/dawn" data-t="黎明"></a>
                 <button id="nav-chat" class="theme-toggle" type="button" data-title="聊天"><span data-icon="chat"></span><span id="nav-chat-unread" class="chat-unread" hidden></span></button>
-                <select id="language" aria-label="语言 / Language"><option value="zh">简体中文</option><option value="en">English</option></select
+                <select id="language" class="site-select" aria-label="语言 / Language"><option value="zh">简体中文</option><option value="en">English</option></select
                 ><button id="theme" type="button" class="theme-toggle"></button
                 ><button id="account" type="button" data-t="登录"></button
                 ><button
@@ -137,41 +137,32 @@
         </section>
         <dialog id="moment-dialog" class="compose-dialog">
             <form id="moment-form">
-                <div class="dialog-head"><h2 data-t="发布动态"></h2><button type="button" id="moment-close" data-title="关闭"><span data-icon="close"></span></button></div>
+                <div class="dialog-head"><h2 id="moment-dialog-title" data-t="发布动态"></h2><button type="button" id="moment-close" data-title="关闭"><span data-icon="close"></span></button></div>
                 <div id="moment-format" class="compose-format" role="tablist"><button id="format-moment" type="button" class="active" data-t="动态"></button><button id="format-post" type="button" data-t="帖子"></button></div>
-                <div class="compose-row"><label><span data-t="交流板块"></span><select id="moment-board"></select></label><label id="moment-title-field" class="compose-title" hidden><span data-t="标题"></span><input id="moment-title" maxlength="100" data-placeholder="给你的想法起个标题"></label></div>
-                <div id="moment-editor-shell" class="compose-editor-shell">
-                    <div id="moment-editor-tabs" class="editor-head"><div class="editor-tabs"><button type="button" class="active" data-editor-view="write" data-t="正文"></button><button type="button" data-editor-view="live" data-t="实时预览"></button><button type="button" data-editor-view="preview" data-t="预览"></button></div><span id="moment-length">0 / 1024</span><button id="moment-fullscreen" class="editor-icon" type="button" data-title="进入全屏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3H5a2 2 0 0 0-2 2v4M15 3h4a2 2 0 0 1 2 2v4M9 21H5a2 2 0 0 1-2-2v-4M15 21h4a2 2 0 0 0 2-2v-4"/></svg></button></div>
-                    <div id="moment-editor" class="compose-editor"><div id="moment-lines" class="editor-lines" aria-hidden="true"></div><textarea id="moment-content" maxlength="1024" required rows="6" data-placeholder="分享你的想法"></textarea><div id="moment-preview" class="markdown-body markdown-preview" hidden></div><div id="editor-selection-bar" class="editor-selection-bar" hidden><button type="button" data-editor-command="bold"><b>B</b></button><button type="button" data-editor-command="italic"><i>I</i></button><button type="button" data-editor-command="underline"><u>U</u></button><button type="button" data-editor-command="highlight">H</button><button type="button" data-editor-command="code" data-value="inline">&lt;/&gt;</button></div><div id="editor-mention-panel" class="editor-mention-panel" hidden></div></div>
-                    <div id="moment-toolbar" class="editor-toolbar">
-                        <div class="editor-tool-dropdown"><button type="button" class="editor-tool" data-editor-menu="heading" data-title="标题层级"><span class="editor-heading-label">H1</span><i>⌄</i></button><div class="editor-menu" data-editor-menu-panel="heading"><button type="button" data-editor-command="heading" data-value="1">H1 <span data-t="一级标题"></span></button><button type="button" data-editor-command="heading" data-value="2">H2 <span data-t="二级标题"></span></button><button type="button" data-editor-command="heading" data-value="3">H3 <span data-t="三级标题"></span></button></div></div>
-                        <button type="button" class="editor-tool" data-editor-command="bold" data-title="加粗"><b>B</b></button>
-                        <button type="button" class="editor-tool" data-editor-command="underline" data-title="下划线"><span data-icon="underline"></span></button>
-                        <button type="button" class="editor-tool" data-editor-command="strike" data-title="删除线"><span data-icon="strike"></span></button>
-                        <button type="button" class="editor-tool" data-editor-command="highlight" data-title="高亮"><span data-icon="highlight"></span></button>
-                        <div class="editor-tool-dropdown"><button type="button" class="editor-tool" data-editor-menu="code" data-title="代码格式"><span data-icon="code"></span><i>⌄</i></button><div class="editor-menu" data-editor-menu-panel="code"><button type="button" data-editor-command="code" data-value="inline" data-t="行内代码"></button><button type="button" data-editor-command="code" data-value="block" data-t="代码块"></button></div></div>
-                        <button type="button" class="editor-tool" data-editor-command="quote" data-title="引用"><span data-icon="quote"></span></button>
-                        <button type="button" class="editor-tool" data-editor-command="spoiler" data-title="剧透"><span data-icon="spoiler"></span></button>
-                        <div class="editor-tool-dropdown"><button type="button" class="editor-tool" data-editor-menu="list" data-title="列表格式"><span data-icon="list"></span><i>⌄</i></button><div class="editor-menu" data-editor-menu-panel="list"><button type="button" data-editor-command="list" data-value="unordered" data-t="无序列表"></button><button type="button" data-editor-command="list" data-value="star" data-t="星号列表"></button><button type="button" data-editor-command="list" data-value="ordered" data-t="有序列表"></button><button type="button" data-editor-command="list" data-value="task" data-t="待办列表"></button></div></div>
-                        <button type="button" class="editor-tool" data-editor-command="link" data-title="插入链接"><span data-icon="link"></span></button>
-                        <button type="button" class="editor-tool" data-editor-command="table" data-title="插入表格"><span data-icon="table"></span></button>
-                        <button type="button" class="editor-tool" data-editor-command="divider" data-title="分割线"><span data-icon="divider"></span></button>
-                        <div class="editor-tool-dropdown"><button type="button" class="editor-tool" data-editor-menu="align" data-title="内容对齐"><span data-icon="align"></span><i>⌄</i></button><div class="editor-menu" data-editor-menu-panel="align"><button type="button" data-editor-command="align" data-value="left" data-t="左对齐"></button><button type="button" data-editor-command="align" data-value="center" data-t="居中"></button><button type="button" data-editor-command="align" data-value="right" data-t="右对齐"></button></div></div>
-                        <button type="button" class="editor-tool" data-editor-command="media" data-title="插入媒体"><span data-icon="video"></span></button>
-                        <button type="button" class="editor-tool" data-editor-command="emoji" data-title="表情"><span data-icon="smile"></span></button>
-                        <button id="moment-editor-image" type="button" class="editor-tool" data-editor-command="image" data-title="添加图片"><span data-icon="image"></span></button>
-                        <button type="button" class="editor-tool" data-editor-command="help" data-title="Markdown帮助"><span data-icon="help"></span></button>
-                    </div>
+                <div class="compose-row"><label><span data-t="交流板块"></span><select id="moment-board" class="site-select"></select></label><label id="moment-title-field" class="compose-title" hidden><span data-t="标题"></span><input id="moment-title" maxlength="100" data-placeholder="给你的想法起个标题"></label></div>
+                <div id="moment-editor-shell"></div>
+                <div class="compose-gallery">
+                    <span class="gallery-label" data-t="图库图片"></span>
+                    <div id="moment-image-preview" class="compose-images"></div>
+                    <button id="moment-gallery-open" class="gallery-add" type="button" data-t="添加图片"></button>
+                    <dialog id="moment-gallery" class="gallery-dialog" aria-labelledby="moment-gallery-title">
+                        <div class="dialog-head"><h2 id="moment-gallery-title" data-t="图库图片"></h2><button id="moment-gallery-close" type="button" data-title="关闭"><span data-icon="close"></span></button></div>
+                        <div class="gallery-actions">
+                            <input id="moment-gallery-search" type="search" data-placeholder="搜索图片">
+                            <button id="moment-gallery-upload" type="button" class="primary" data-t="上传图片"></button>
+                            <input id="moment-gallery-files" type="file" accept="image/jpeg,image/png,image/gif,image/webp" multiple hidden>
+                        </div>
+                        <p id="moment-gallery-status" role="status"></p>
+                        <div id="moment-gallery-library" class="gallery-library"></div>
+                    </dialog>
                 </div>
-                <div id="moment-image-preview" class="compose-images"><label class="image-add"><span data-icon="plus"></span><input id="moment-images-grid" type="file" accept="image/jpeg,image/png,image/gif,image/webp" multiple></label></div><input id="moment-editor-files" type="file" accept="image/jpeg,image/png,image/gif,image/webp" multiple hidden>
                 <label id="moment-anonymous-field" class="compose-check" hidden><input id="moment-anonymous" type="checkbox"><span data-t="匿名发布"></span></label>
                 <label class="compose-location"><span data-icon="pin"></span><input id="moment-location" maxlength="200" data-placeholder="添加地点（选填）"><button id="moment-locate" type="button" data-t="使用IP属地"></button></label>
                 <p id="moment-form-error" role="alert"></p>
-                <div class="compose-footer"><span data-t="发布次数按站点设置，回复不限"></span><button class="primary" type="submit" data-t="发布"></button></div>
+                <div class="compose-footer"><span id="moment-publish-note" data-t="发布次数按站点设置，回复不限"></span><button id="moment-submit" class="primary" type="submit" data-t="发布"></button></div>
             </form>
         </dialog>
         <dialog id="moment-image-viewer" class="image-viewer"><button id="image-viewer-close" type="button" data-title="关闭"><span data-icon="close"></span></button><img id="image-viewer-image" alt=""></dialog>
-        <dialog id="editor-help-dialog" class="editor-help-dialog"><div class="dialog-head"><h2 data-t="Markdown帮助"></h2><button id="editor-help-close" type="button" data-title="关闭"><span data-icon="close"></span></button></div><div id="editor-help-content" class="editor-help-content markdown-body"></div></dialog>
         <footer>
             Dawn <span data-t="简洁、开放、可扩展"></span
             ><a

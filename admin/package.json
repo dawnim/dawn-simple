@@ -4,10 +4,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "build": "vue-tsc --noEmit && vite build"
+    "build": "vue-tsc --noEmit && vite build",
+    "dev:lib": "pnpm --dir ../../dawn-admin exec vite build --watch --minify=false"
   },
   "dependencies": {
-    "@dawnim/admin": "0.1.6",
+    "@dawnim/admin": "link:../../dawn-admin",
     "element-plus": "^2.11.2",
     "pinia": "^3.0.3",
     "vue": "^3.5.41",

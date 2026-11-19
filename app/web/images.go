@@ -3,7 +3,6 @@ package web
 import (
 	"fmt"
 	"net/http"
-	"regexp"
 	"slices"
 	"strconv"
 	"strings"
@@ -13,28 +12,11 @@ import (
 	"github.com/dawnim/dawn-server/app/admin/controllers"
 	"github.com/dawnim/dawn-server/app/admin/response"
 	sdk "github.com/dawnim/dawn-server/app/models"
+	"github.com/dawnim/dawn-simple/app/momentcontent"
 	"github.com/gin-gonic/gin"
 	"github.com/prismgo/framework/route"
 	"gorm.io/gorm"
 )
-
-var imageMIMEs = []string{"image/jpeg", "image/png", "image/gif", "image/webp"}
-
-var attachmentRef = regexp.MustCompile(`attachment://(\d+)`)
-var mediaInContent = regexp.MustCompile(`(?i)!\[[^\]]*\]\(|<img\b|<video\b|<iframe\b|MEDIA::`)
-
-// 动态正文不允许图片/视频，媒体只走编辑器下方附件区；帖子与评论不限制。
-func hasInlineMedia(content string) bool { return mediaInContent.MatchString(content) }
-
-func contentAttachmentIDs(content string) []uint {
-	ids := []uint{}
-	for _, match := range attachmentRef.FindAllStringSubmatch(content, -1) {
-		if id, err := strconv.ParseUint(match[1], 10, 64); err == nil {
-			ids = append(ids, uint(id))
-		}
-	}
-	return ids
-}
 
 // 附件 id → admin_files.id；秒传复用同一个 file，引用次数天然按文件聚合。
 func referencedFileIDs(db *gorm.DB, attachmentIDs []uint) []uint {
@@ -74,7 +56,7 @@ func registerMomentImages(a *admin.App) {
 		}
 		db := a.DB.WithContext(c.Request.Context()).Model(&sdk.Attachment{}).
 			Where("scope = ? AND created_by = ?", fmt.Sprintf("user:%d", s.User.ID), s.User.ID).
-			Where("file_id IN (?)", a.DB.Model(&sdk.File{}).Select("id").Where("mime IN ?", imageMIMEs))
+			Where("file_id IN (?)", a.DB.Model(&sdk.File{}).Select("id").Where("mime IN ?", momentcontent.ImageMIMEs))
 		if keyword := strings.TrimSpace(c.Query("keyword")); keyword != "" {
 			db = db.Where("name LIKE ?", "%"+keyword+"%")
 		}
@@ -92,7 +74,7 @@ func registerMomentImages(a *admin.App) {
 		}
 		response.Respond(c, out)
 	})
-	route.Get("/api/moment-images/{id}/content", func(c *gin.Context) {
+	serve := func(c *gin.Context, metadata bool) {
 		id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 		if err != nil || id == 0 {
 			c.Status(http.StatusNotFound)
@@ -101,10 +83,16 @@ func registerMomentImages(a *admin.App) {
 		var row sdk.Attachment
 		err = a.DB.WithContext(c.Request.Context()).Preload("File").
 			Where("id = ? AND scope LIKE 'user:%'", uint(id)).First(&row).Error
-		if err != nil || !slices.Contains(imageMIMEs, row.File.MIME) {
+		if err != nil || !slices.Contains(momentcontent.ImageMIMEs, row.File.MIME) {
 			c.Status(http.StatusNotFound)
 			return
 		}
+		if metadata {
+			response.Respond(c, gin.H{"id": row.ID, "name": row.Name})
+			return
+		}
 		uploader.ServeAttachment(c, row)
-	})
+	}
+	route.Get("/api/moment-images/{id}", func(c *gin.Context) { serve(c, true) })
+	route.Get("/api/moment-images/{id}/content", func(c *gin.Context) { serve(c, false) })
 }

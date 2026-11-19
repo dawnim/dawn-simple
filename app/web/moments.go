@@ -18,6 +18,7 @@ import (
 	"github.com/dawnim/dawn-server/support/customer"
 	"github.com/dawnim/dawn-server/support/geoip"
 	"github.com/dawnim/dawn-simple/app/models"
+	"github.com/dawnim/dawn-simple/app/momentcontent"
 	"github.com/gin-gonic/gin"
 	"github.com/prismgo/framework/route"
 	"gorm.io/gorm"
@@ -25,40 +26,42 @@ import (
 )
 
 type momentView struct {
-	UserID      uint   `json:"-"`
-	Format      string `json:"format"`
-	Title       string `json:"title"`
-	Board       string `json:"board"`
-	ActivityAt  int64  `json:"activity_at"`
-	ID          uint   `json:"id"`
-	Content     string `json:"content"`
-	Images      string `json:"images"`
-	Location    string `json:"location"`
-	Region      string `json:"region"`
-	CreatedAt   int64  `json:"created_at"`
-	UniqueID    string `json:"unique_id"`
-	Nickname    string `json:"nickname"`
-	Avatar      string `json:"avatar"`
-	UserType    string `json:"user_type"`
-	Flowers     int64  `json:"flowers"`
-	Eggs        int64  `json:"eggs"`
-	Comments    int64  `json:"comments"`
-	IsAnonymous bool   `json:"is_anonymous"`
-	CanManage   bool   `json:"can_manage"`
+	UserID      uint            `json:"-"`
+	Format      string          `json:"format"`
+	Title       string          `json:"title"`
+	Board       string          `json:"board"`
+	ActivityAt  int64           `json:"activity_at"`
+	ID          uint            `json:"id"`
+	Content     string          `json:"content"`
+	Images      string          `json:"images"`
+	Location    string          `json:"location"`
+	Region      string          `json:"region"`
+	CreatedAt   int64           `json:"created_at"`
+	UniqueID    string          `json:"unique_id"`
+	Nickname    string          `json:"nickname"`
+	Avatar      string          `json:"avatar"`
+	UserType    string          `json:"user_type"`
+	Flowers     int64           `json:"flowers"`
+	Eggs        int64           `json:"eggs"`
+	Comments    int64           `json:"comments"`
+	IsAnonymous bool            `json:"is_anonymous"`
+	CanManage   bool            `json:"can_manage"`
+	ImageNames  map[uint]string `json:"image_names,omitempty" gorm:"-"`
 }
 
 type commentView struct {
-	ID        uint   `json:"id"`
-	MomentID  uint   `json:"moment_id"`
-	ReplyID   uint   `json:"reply_id"`
-	Content   string `json:"content"`
-	Region    string `json:"region"`
-	CreatedAt int64  `json:"created_at"`
-	UniqueID  string `json:"unique_id"`
-	Nickname  string `json:"nickname"`
-	Avatar    string `json:"avatar"`
-	UserType  string `json:"user_type"`
-	ReplyName string `json:"reply_name"`
+	ID         uint            `json:"id"`
+	MomentID   uint            `json:"moment_id"`
+	ReplyID    uint            `json:"reply_id"`
+	Content    string          `json:"content"`
+	Region     string          `json:"region"`
+	CreatedAt  int64           `json:"created_at"`
+	UniqueID   string          `json:"unique_id"`
+	Nickname   string          `json:"nickname"`
+	Avatar     string          `json:"avatar"`
+	UserType   string          `json:"user_type"`
+	ReplyName  string          `json:"reply_name"`
+	ImageNames map[uint]string `json:"image_names,omitempty" gorm:"-"`
 }
 
 type momentInput struct {
@@ -71,8 +74,8 @@ type momentInput struct {
 	IsAnonymous bool   `json:"is_anonymous"`
 }
 
-func (in *momentInput) normalize() bool {
-	in.Title, in.Content, in.Location = strings.TrimSpace(in.Title), strings.TrimSpace(in.Content), strings.TrimSpace(in.Location)
+func (in *momentInput) normalize(media momentcontent.Media) bool {
+	in.Title, in.Location = strings.TrimSpace(in.Title), strings.TrimSpace(in.Location)
 	if in.Format == "" {
 		in.Format = "moment"
 	}
@@ -80,7 +83,7 @@ func (in *momentInput) normalize() bool {
 		in.Board = "general"
 	}
 	if in.Format == "moment" && in.Title == "" {
-		first, _, _ := strings.Cut(in.Content, "\n")
+		first, _, _ := strings.Cut(strings.TrimSpace(in.Content), "\n")
 		in.Title = string([]rune(first)[:min(60, utf8.RuneCountInString(first))])
 	}
 	maxContent := 1024
@@ -88,10 +91,10 @@ func (in *momentInput) normalize() bool {
 		maxContent = 10000
 	}
 	// 动态正文只放文字与 Markdown 格式，图片/视频统一走编辑器下方附件区。
-	if in.Format == "moment" && hasInlineMedia(in.Content) {
+	if in.Format == "moment" && media.Inline {
 		return false
 	}
-	if (in.Format == "post" && in.Title == "") || in.Content == "" || len(in.Images) > 9 ||
+	if (in.Format == "post" && in.Title == "") || strings.TrimSpace(in.Content) == "" || len(in.Images) > 9 ||
 		utf8.RuneCountInString(in.Title) > 100 || utf8.RuneCountInString(in.Content) > maxContent ||
 		utf8.RuneCountInString(in.Location) > 200 {
 		return false
@@ -106,10 +109,27 @@ func imagesOwned(a *admin.App, c *gin.Context, userID uint, ids []uint) bool {
 	if len(ids) == 0 {
 		return true
 	}
+	unique := make(map[uint]struct{}, len(ids))
+	for _, id := range ids {
+		unique[id] = struct{}{}
+	}
 	var count int64
-	err := a.DB.WithContext(c.Request.Context()).Model(&sdk.Attachment{}).
-		Where("scope = ? AND id IN ?", fmt.Sprintf("user:%d", userID), ids).Count(&count).Error
-	return err == nil && count == int64(len(ids))
+	err := momentcontent.Images(a.DB.WithContext(c.Request.Context()), ids).
+		Where("scope = ?", fmt.Sprintf("user:%d", userID)).Count(&count).Error
+	return err == nil && count == int64(len(unique))
+}
+
+func imageNames(db *gorm.DB, ids []uint) (map[uint]string, error) {
+	if len(ids) == 0 {
+		return nil, nil
+	}
+	var rows []sdk.Attachment
+	err := momentcontent.Images(db, ids).Select("id", "name").Find(&rows).Error
+	names := make(map[uint]string, len(rows))
+	for _, row := range rows {
+		names[row.ID] = row.Name
+	}
+	return names, err
 }
 
 // siteSession authenticates the website identity and selects its support application.
@@ -186,11 +206,11 @@ func registerMoments(a *admin.App) {
 			response.Report(c, err, 422)
 			return
 		}
-		if exists && !slices.Contains([]string{"image/jpeg", "image/png", "image/gif", "image/webp"}, row.File.MIME) {
+		if exists && !slices.Contains(momentcontent.ImageMIMEs, row.File.MIME) {
 			response.Report(c, customer.ErrInvalid)
 			return
 		}
-		response.Respond(c, gin.H{"exists": exists, "id": row.ID})
+		response.Respond(c, gin.H{"exists": exists, "id": row.ID, "name": row.Name})
 	})
 	route.Post("/api/moment-images", func(c *gin.Context) {
 		s, ok := siteSession(a, c, true)
@@ -226,7 +246,7 @@ func registerMoments(a *admin.App) {
 			response.Report(c, err)
 			return
 		}
-		if !slices.Contains([]string{"image/jpeg", "image/png", "image/gif", "image/webp"}, http.DetectContentType(head[:n])) {
+		if !slices.Contains(momentcontent.ImageMIMEs, http.DetectContentType(head[:n])) {
 			response.Report(c, customer.ErrInvalid)
 			return
 		}
@@ -239,8 +259,21 @@ func registerMoments(a *admin.App) {
 			response.Report(c, err, 422)
 			return
 		}
-		response.Created(c, gin.H{"id": row.ID}, c.Request.URL.Path)
+		response.Created(c, gin.H{"id": row.ID, "name": row.Name}, c.Request.URL.Path)
 	})
+	serveImage := func(c *gin.Context, ids []uint) {
+		imageID, err := strconv.ParseUint(c.Param("image_id"), 10, strconv.IntSize)
+		if err != nil || !slices.Contains(ids, uint(imageID)) {
+			c.Status(http.StatusNotFound)
+			return
+		}
+		var image sdk.Attachment
+		if err := momentcontent.Images(a.DB.WithContext(c.Request.Context()), []uint{uint(imageID)}).Preload("File").First(&image).Error; err != nil {
+			response.Report(c, err)
+			return
+		}
+		uploader.ServeAttachment(c, image)
+	}
 	route.Get("/api/moments/{id}/images/{image_id}", func(c *gin.Context) {
 		id := response.ID(c)
 		if c.IsAborted() {
@@ -251,22 +284,29 @@ func registerMoments(a *admin.App) {
 			response.Report(c, err)
 			return
 		}
-		var images []uint
-		if json.Unmarshal([]byte(row.Images), &images) != nil {
-			response.Report(c, customer.ErrInvalid)
-			return
-		}
-		imageID, err := strconv.ParseUint(c.Param("image_id"), 10, 64)
-		if err != nil {
-			response.Report(c, customer.ErrInvalid)
-			return
-		}
-		var image sdk.Attachment
-		if err := a.DB.WithContext(c.Request.Context()).Preload("File").Where("id IN ?", images).First(&image, uint(imageID)).Error; err != nil {
+		var ids []uint
+		if err := json.Unmarshal([]byte(row.Images), &ids); err != nil {
 			response.Report(c, err)
 			return
 		}
-		uploader.ServeAttachment(c, image)
+		if row.Format == "post" {
+			ids = append(ids, momentcontent.ParseMedia(row.Content).IDs...)
+		}
+		serveImage(c, ids)
+	})
+	route.Get("/api/moments/{id}/comments/{comment_id}/images/{image_id}", func(c *gin.Context) {
+		id := response.ID(c)
+		if c.IsAborted() {
+			return
+		}
+		var comment models.MomentComment
+		db := a.DB.WithContext(c.Request.Context())
+		posts := db.Model(&models.Moment{}).Select("id").Where("id = ?", id)
+		if err := db.Where("id = ? AND moment_id IN (?)", c.Param("comment_id"), posts).First(&comment).Error; err != nil {
+			response.Report(c, err)
+			return
+		}
+		serveImage(c, momentcontent.ParseMedia(comment.Content).IDs)
 	})
 	// This is a business query; the shared customer widget has no forum knowledge.
 	route.Get("/api/moment-overview", func(c *gin.Context) {
@@ -353,6 +393,14 @@ func registerMoments(a *admin.App) {
 			response.Report(c, gorm.ErrRecordNotFound)
 			return
 		}
+		if row.Format == "post" {
+			names, err := imageNames(a.DB.WithContext(c.Request.Context()), momentcontent.ParseMedia(row.Content).IDs)
+			if err != nil {
+				response.Report(c, err)
+				return
+			}
+			row.ImageNames = names
+		}
 		maskMoments(a, c, &row)
 		response.Respond(c, row)
 	})
@@ -396,7 +444,13 @@ func registerMoments(a *admin.App) {
 			return
 		}
 		var input momentInput
-		if c.ShouldBindJSON(&input) != nil || !input.normalize() || !imagesOwned(a, c, s.User.ID, input.Images) {
+		if c.ShouldBindJSON(&input) != nil {
+			response.Report(c, customer.ErrInvalid)
+			return
+		}
+		media := momentcontent.ParseMedia(input.Content)
+		ids := append(slices.Clone(input.Images), media.IDs...)
+		if !input.normalize(media) || !imagesOwned(a, c, s.User.ID, ids) {
 			response.Report(c, customer.ErrInvalid)
 			return
 		}
@@ -416,7 +470,7 @@ func registerMoments(a *admin.App) {
 			response.Report(c, gorm.ErrRecordNotFound)
 			return
 		}
-		touchFiles(a.DB.WithContext(c.Request.Context()), append(append([]uint{}, input.Images...), contentAttachmentIDs(input.Content)...))
+		touchFiles(a.DB.WithContext(c.Request.Context()), ids)
 		response.Respond(c, gin.H{"id": id})
 	})
 	route.Post("/api/moments", func(c *gin.Context) {
@@ -425,7 +479,13 @@ func registerMoments(a *admin.App) {
 			return
 		}
 		var input momentInput
-		if c.ShouldBindJSON(&input) != nil || !input.normalize() {
+		if c.ShouldBindJSON(&input) != nil {
+			response.Report(c, customer.ErrInvalid)
+			return
+		}
+		media := momentcontent.ParseMedia(input.Content)
+		ids := append(slices.Clone(input.Images), media.IDs...)
+		if !input.normalize(media) {
 			response.Report(c, customer.ErrInvalid)
 			return
 		}
@@ -439,7 +499,7 @@ func registerMoments(a *admin.App) {
 			response.Report(c, err)
 			return
 		}
-		if !imagesOwned(a, c, s.User.ID, input.Images) {
+		if !imagesOwned(a, c, s.User.ID, ids) {
 			response.Report(c, customer.ErrInvalid)
 			return
 		}
@@ -480,7 +540,7 @@ func registerMoments(a *admin.App) {
 			return
 		}
 		a.WakeChat(c.Request.Context())
-		touchFiles(a.DB.WithContext(c.Request.Context()), append(append([]uint{}, input.Images...), contentAttachmentIDs(input.Content)...))
+		touchFiles(a.DB.WithContext(c.Request.Context()), ids)
 		response.Created(c, gin.H{"id": row.ID}, fmt.Sprintf("%s/%d", c.Request.URL.Path, row.ID))
 	})
 	// 软删除：models.Moment 继承 sdk.Base（soft_delete.DeletedAt），Delete 只写 deleted_at，
@@ -538,6 +598,28 @@ func registerMoments(a *admin.App) {
 			response.Report(c, err)
 			return
 		}
+		refs := make([][]uint, len(rows))
+		var ids []uint
+		for i := range rows {
+			refs[i] = momentcontent.ParseMedia(rows[i].Content).IDs
+			ids = append(ids, refs[i]...)
+		}
+		names, err := imageNames(a.DB.WithContext(c.Request.Context()), ids)
+		if err != nil {
+			response.Report(c, err)
+			return
+		}
+		for i, keys := range refs {
+			if len(keys) == 0 {
+				continue
+			}
+			rows[i].ImageNames = make(map[uint]string, len(keys))
+			for _, id := range keys {
+				if name, ok := names[id]; ok {
+					rows[i].ImageNames[id] = name
+				}
+			}
+		}
 		response.Paginated(c, rows, total, page, size)
 	})
 	route.Post("/api/moments/{id}/comments", func(c *gin.Context) {
@@ -557,8 +639,8 @@ func registerMoments(a *admin.App) {
 			response.Report(c, customer.ErrInvalid)
 			return
 		}
-		input.Content = strings.TrimSpace(input.Content)
-		if input.Content == "" || utf8.RuneCountInString(input.Content) > 1024 {
+		ids := momentcontent.ParseMedia(input.Content).IDs
+		if strings.TrimSpace(input.Content) == "" || utf8.RuneCountInString(input.Content) > 1024 || !imagesOwned(a, c, s.User.ID, ids) {
 			response.Report(c, customer.ErrInvalid)
 			return
 		}
@@ -603,7 +685,7 @@ func registerMoments(a *admin.App) {
 			return
 		}
 		a.WakeChat(c.Request.Context())
-		touchFiles(a.DB.WithContext(c.Request.Context()), contentAttachmentIDs(row.Content))
+		touchFiles(a.DB.WithContext(c.Request.Context()), ids)
 		response.Created(c, gin.H{"id": row.ID}, fmt.Sprintf("%s/%d", c.Request.URL.Path, row.ID))
 	})
 	route.Delete("/api/moments/{id}/comments/{comment_id}", func(c *gin.Context) {

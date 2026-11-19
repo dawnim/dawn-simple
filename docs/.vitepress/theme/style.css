@@ -13,6 +13,31 @@
   --vp-c-bg-alt: #191b1f;
 }
 
+.VPNavBarTranslations .VPMenu,
+.VPNavBarExtra .VPMenu,
+.VPLocalNavOutlineDropdown .items {
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 10px;
+  background: var(--vp-c-bg-elv);
+  box-shadow: 0 7px 22px rgb(0 0 0 / 12%);
+}
+
+.VPNavBarTranslations .VPMenu a,
+.VPNavBarExtra .VPMenu a,
+.VPNavScreenTranslations a {
+  border-radius: 6px;
+}
+
+:is(.VPNavBarTranslations, .VPNavBarExtra, .VPNavScreenTranslations, .VPLocalNavOutlineDropdown)
+:is(button, a):focus-visible {
+  outline: 2px solid var(--vp-c-brand-1);
+  outline-offset: 2px;
+}
+
+.VPLocalNavOutlineDropdown .outline-link.active {
+  color: var(--vp-c-brand-1);
+}
+
 .VPHomeHero {
   padding-top: 64px !important;
   padding-bottom: 48px !important;

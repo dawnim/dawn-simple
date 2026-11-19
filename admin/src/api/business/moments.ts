@@ -48,10 +48,10 @@ export const columns = (t: (key: string) => string): Column[] =>
     },
     { prop: 'user_id', label: 'fields.moments.user_id', type: 'number', required: true },
     { prop: 'content', label: 'fields.moments.content', type: 'textarea', required: true, formSlot: 'content' },
+    { prop: 'images', label: 'fields.moments.images', type: 'textarea', hidden: true, formSlot: 'images' },
     { prop: 'region', label: 'fields.moments.region' },
     { prop: 'is_anonymous', label: 'fields.moments.is_anonymous', type: 'boolean' },
     { prop: 'location', label: 'fields.moments.location' },
-    { prop: 'images', label: 'fields.moments.images', type: 'textarea', hidden: true, formSlot: 'images' },
     { prop: 'created_at', label: 'fields.moments.created_at', type: 'date', readonly: true },
     { prop: 'updated_at', label: 'fields.moments.updated_at', type: 'date', readonly: true }
   ] as Column[]).map((column) => ({ ...column, label: t(column.label) }))

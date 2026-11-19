@@ -6,7 +6,7 @@
 
 任何人可浏览板块、搜索、最新活动、新帖、热门、分页与详情。官网游客与客服复用身份；完善信息成为注册用户后，可以发帖、上传图片、评论、回复和聊天。公开页面使用`unique_id`展示用户编号。
 
-发布窗口支持“动态”和“帖子”两种形式。动态默认选中，只写短正文；帖子支持标题、Markdown双栏编辑、代码高亮和实时预览。帖子编辑器按Rhex 1:1提供17项工具栏（Rhex的锁定/加密等按原有约定不启用）、三视图预览、全屏、行号、浮动选区工具条、@提及补全面板与完整快捷键；`Enter`续写列表、`Tab`/`Shift+Tab`调层级、`Alt+↑/↓`移动表格行，草稿写入`localStorage`并可用`Cmd/Ctrl+S`保存。渲染侧同样对齐Rhex：markdown-it插件链覆盖脚注、定义列表、缩写、上下标、插入、标记、任务列表、KaTeX公式、callout与折叠剧透，另有点击遮罩、`@用户`、自定义表情短码、媒体标记和Mermaid图表；代码块带语言头、复制按钮与高亮配色，标题自动生成锚点。锁定/加密、多块权限内容、投票抽奖与付费附件属Rhex业务能力，不移植。正文图片可通过按钮、粘贴或拖放上传，统一走附件上传接口并在光标处插入占位符，动态仍使用朋友圈式“+”图片格子。动态包含板块、300字内正文、最多9张图片和选填地点；帖子正文上限为10000字。作者可以编辑、软删除自己已发布的帖子：列表行和详情页都按服务端下发的`can_manage`显示“编辑”“删除”，接口为`PUT /api/moments/{id}`与`DELETE /api/moments/{id}`（只写`deleted_at`，行数据、评论、点赞均保留，列表与详情由GORM自动过滤）；列表页删除后就地刷新，详情页删除后返回列表。作者旁的灰色属地由服务端按请求IP查询城市，缺少城市时依次使用省份、国家，定位失败显示“未知”；位置输入框打开发布窗口时默认填入当前IP属地，用户可调整。评论同样显示服务端属地。
+发布窗口支持“动态”和“帖子”两种形式。动态默认选中，只写短正文；帖子支持标题、Markdown双栏编辑、代码高亮和实时预览。帖子编辑器按Rhex 1:1提供17项工具栏（Rhex的锁定/加密等按原有约定不启用）、三视图预览、全屏、行号、浮动选区工具条、@提及补全面板与完整快捷键；`Enter`续写列表、`Tab`/`Shift+Tab`调层级、`Alt+↑/↓`移动表格行，草稿写入`localStorage`并可用`Cmd/Ctrl+S`保存。渲染侧同样对齐Rhex：markdown-it插件链覆盖脚注、定义列表、缩写、上下标、插入、标记、任务列表、KaTeX公式、callout与折叠剧透，另有点击遮罩、`@用户`、自定义表情短码、媒体标记和Mermaid图表；代码块带语言头、复制按钮与高亮配色，标题自动生成锚点。锁定/加密、多块权限内容、投票抽奖与付费附件属Rhex业务能力，不移植。正文图片可通过按钮、粘贴或拖放上传，统一走附件上传接口并在光标处插入占位符，动态仍使用朋友圈式“+”图片格子。动态包含板块、1024字内正文、最多9张图片和选填地点；帖子正文上限为10000字。作者可以编辑、软删除自己已发布的帖子：列表行和详情页都按服务端下发的`can_manage`显示“编辑”“删除”，接口为`PUT /api/moments/{id}`与`DELETE /api/moments/{id}`（只写`deleted_at`，行数据、评论、点赞均保留，列表与详情由GORM自动过滤）；列表页删除后就地刷新，详情页删除后返回列表。作者旁的灰色属地由服务端按请求IP查询城市，缺少城市时依次使用省份、国家，定位失败显示“未知”；位置输入框打开发布窗口时默认填入当前IP属地，用户可调整。评论同样显示服务端属地。
 
 帖子可以选择匿名发布。数据库仍保存真实`user_id`用于本人删除、额度和后台追溯，公开列表只显示“匿名用户”，属地仍按要求展示。动态不提供匿名开关。
 匿名动态进入聊天大厅时使用匿名发送主体，评论不会通过私聊暴露匿名作者身份。
@@ -48,15 +48,13 @@
 
 后台这轮对扩展做了三处通用增强：`CrudPage`的`actionWidth`（默认100，业务传220容纳“评论”按钮）、`formWidth`（弹窗宽度，编辑器页传1100px）和`Column.formSlot`（按字段把控件交给具名`setOptions`插槽）。列表、工具栏、分页与权限判断全部沿用框架组件，业务逻辑仍只在simple。
 
-后台新增/编辑动态时在弹窗内挂载与官网**同一个编辑器内核**。内核自带 Rhex 原版皮肤（DOM、CSS、图标）、17项工具栏、三视图、行号、全屏、快捷键、表格网格、弹层与@候选；官网的静态 DOM 由内核直接接管，后台由`editorTemplate()`生成同款皮肤。业务只注入真正需要外部参与的能力：`render`、`upload`、`mentions`、`config`、`previewImage`、`onChange`、`onSaveDraft`。官网`format=moment`时收起工具栏与预览（上限300字），`format=post`放开到10000字；后台通过`alwaysFull`让两种格式都保留完整编辑器，字数上限仍按格式区分。后台上传走管理员身份的`/admin/attachments`，@提及与工具配置仍读公开的`/api`接口，草稿按记录ID分桶。
+## 编辑器与附件
 
-后台把`images`字段换成缩略图网格：已有图片按附件ID经带 token 的`fetch`转成`blob:`显示，可添加、可移除；编辑器里新上传的图片会同步登记到`images`，否则官网`/api/moments/{id}/images/{image_id}`按数组取图会失败。编辑器下方另有“正文图片”缩略图条，从正文里解析`attachment://`、`upload://`与站内图片路径，同样按鉴权`blob:`显示并可点击查看；这些ID会自动补进`images`，避免“后台预览有图、官网发布后是坏图”。预览里的`attachment://`同样经鉴权转成`blob:`，避免后台附件接口因`<img>`不带 Bearer 而返回401。后台不加载官网方言bundle，预览改用框架新增的`renderMarkdown`（保留图片与表格；聊天用的`renderChatMarkdown`仍禁用图片），内嵌图统一限高360px。
+官网和后台使用同一套编辑器与 Simple 的 Markdown 渲染规则。动态正文上限为1024字，图片通过独立图库添加。帖子正文上限为10000字，可在正文插入图片和媒体，也可粘贴图片。图库独立上传或从历史图片中选择，图片ID保存到`images`。
 
-## 编辑器、渲染与扩展边界
+Simple 将站内正文图片写成`[attachment://123]`，帖子和评论也支持标准 Markdown 图片。渲染站内附件时，Simple 用附件名（上传时取原始文件名）作为`alt`，按当前页面解析图片地址。已发布图片可以直接浏览。详情页正文和图库引用同一附件时只展示一次，图库记录照常保存。移除正文引用后，该图会重新显示在下方图库。
 
-**业务在simple，可复用能力在扩展。** 放进`@dawnim/admin`的都是不依赖业务对象的纯技术能力：渲染后的通用DOM增强`enhanceMarkdown`（代码复制、标题锚点、遮罩、坏图、KaTeX与Mermaid按需加载）、`.markdown-body`通用排版样式（含highlight.js亮暗配色），以及`createMarkdownEditor(root, opts)`——一个**自带完整皮肤与全部功能**的编辑器内核：Rhex 原版 DOM/CSS/图标、17项工具、三视图、行号、选区浮动条、表格网格、弹层、@候选、快捷键与全屏。官网与后台因此 1:1 共用同一套界面与交互，业务只需注入渲染方言、图片上传等少数外部能力，不再重复实现。`@dawnim/dawn-server`只做了一处框架修复：`PATCH /admin/settings`对扩展新注册的配置分组按需建行，避免保存时报「记录不存在」；身份、`CheckUpload/SaveUpload/ServeAttachment`、GeoIP、设置、菜单与聊天能力原本就齐全，再包一层通用上传路由属于重复封装，且会破坏`main`分支对已发布模块的编译。
-
-表情选择也是内核自带能力，不经过后台配置：`dawn-admin/src/dawn/emoji-data.ts`内置1914个Unicode基础表情（来源`unicode-emoji-json`），按Telegram顺序分成「最近使用 / 笑脸与人像 / 动物与自然 / 食物与饮品 / 活动 / 旅行与地点 / 物品 / 符号 / 旗帜」9组。点击工具栏笑脸按钮，浮层从按钮旁弹出（官网挂原生`dialog`内、后台挂`body`，均`position:fixed`）；**所有分组一次性渲染在同一个滚动容器里**，组名是`sticky`锚点，继续向下滚自然进入后一组、向上滚回到前一组，底部tab随滚动自动高亮，点tab直接跳到对应锚点，不再按组切换重绘。点击表情即插入**字符本身**且面板不关闭可连续插入，点击外部或`ESC`收起；最近使用写入`localStorage`。分组锚点名、空态与关闭提示走编辑器`zh`/`en`语言包，`setOptions({locale})`即时切换。旧内容里的`:smile:`短码仍由渲染层支持，`moments.emoji_shortcodes`只服务手写短码，编辑器不再读取它。面板内的`<form method="dialog">`会拦截`submit`冒泡，避免后台`ElForm`把「取消」当成整条记录的提交。
+编辑器扩展方式见[Markdown 编辑器](editor.md)。
 
 | 层 | 位置 | 职责 |
 |---|---|---|
@@ -64,10 +62,10 @@
 | 业务（渲染） | `tools/moment_markdown.mjs` | markdown-it插件链、自定义语法、白名单净化 |
 | 业务（桥接） | `tools/moment_bundle.mjs` | 把内核与渲染规则暴露为`window.DawnMomentEditor` / `DawnMomentMarkdown` |
 | 业务（官网） | `app/web/assets/{index.html,site.js,site.css}` | 发帖流程；注入渲染、上传、@候选、配置、草稿 |
-| 业务（后台） | `admin/src/views/business/moments/modules/{moment-editor.vue,moment-images.vue,attachments.ts}` | Vue薄壳；注入admin上传、提及、渲染回退；图片缩略图与附件鉴权 |
+| 业务（后台） | `admin/src/views/business/moments/modules/{moment-editor.vue,moment-images.vue,attachments.ts}` | Vue薄壳；注入管理员上传、提及和共享渲染器；图片缩略图与附件鉴权 |
 | 业务（接口） | `app/web/moments.go` | 发布/编辑/配置/提及搜索 |
 
-`tools/`是simple自包含的npm工程（`package.json`+`package-lock.json`），用esbuild把渲染规则、框架的`enhanceMarkdown`与编辑器内核一起打成`app/web/assets/moment-markdown.js`，并把框架样式（`markdown.css` + `editor.css`）拼接为`moment-markdown.css`。两份产物随仓库提交：`dev`分支通过`admin/node_modules/@dawnim/admin`的`link:`引用扩展源码执行`sh tools/build_moment_markdown.sh`重建，`main`分支使用公共引用和已提交产物，不依赖相邻仓库。公式样式与Mermaid运行时只在命中对应内容时从jsDelivr按需加载，其余资源完全本地。
+构建官网和后台前执行`npm --prefix tools ci`。`sh tools/build_moment_markdown.sh`使用已安装的编辑器产物，与 Simple 渲染规则一起打包，并复制共享 CSS 供 Go 内嵌。后台直接导入同一份渲染源码。
 
 聊天大厅复用同一个`DawnMomentMarkdown`：消息正文渲染后交给`enhanceMarkdown`，会话列表摘要取渲染结果的纯文本、剧透替换为`•••`。气泡内的昵称与卡片链接用`.chat-message > strong/button`限定，避免官网全局表单样式污染Markdown元素；标题、段落与代码块收紧间距。桌面宽度点击浮层外部（`pointerdown`）即收起，与客服widget一致；移动端不自动收起，文档iframe内的点击沿用既有`postMessage`通道。
 
@@ -131,7 +129,7 @@ widget通过公开的`menu/menuLayout`配置接入“客服/聊天”，业务�
 
 发布额度按站点进程时区的自然日计算，删除后不返还。AI草稿请求通过Redis原子计数预占额度，失败也计次，避免重试刷模型；手动与自动额度分开。
 
-阅读文档时可点“AI写动态”，根据当前文章生成300字内草稿，允许编辑后发布到本人动态。模型请求复用`Customer.GenerateText`及`dawn`客服应用的模型、协议和密钥配置，前端不持有模型密钥。
+阅读文档时可点“AI写动态”，根据当前文章生成1024字内草稿，允许编辑后发布到本人动态。模型请求复用`Customer.GenerateText`及`dawn`客服应用的模型、协议和密钥配置，前端不持有模型密钥。
 
 自动任务每6小时加入现有串行队列，随机选取最近文档阅读路径和大致地区，以AI账号第一人称发布俏皮短文，默认每天最多1条，明确标识AI。配置Brave密钥后加入最近一周科技趣闻素材；搜索失败仍按文档生成。没有阅读记录或关闭自动额度时不生成。
 

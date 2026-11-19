@@ -13,6 +13,7 @@ import (
 	"github.com/dawnim/dawn-server/app/admin/response"
 	sysmodels "github.com/dawnim/dawn-server/app/models"
 	"github.com/dawnim/dawn-simple/app/models"
+	"github.com/dawnim/dawn-simple/app/momentcontent"
 	"github.com/gin-gonic/gin"
 	"github.com/prismgo/framework/route"
 	"gorm.io/gorm"
@@ -35,12 +36,12 @@ func RegisterMoments(a *sdk.App, g *route.Registrar) {
 			if m.Board == "" {
 				m.Board = "general"
 			}
-			m.Title, m.Content, m.Location = strings.TrimSpace(m.Title), strings.TrimSpace(m.Content), strings.TrimSpace(m.Location)
+			m.Title, m.Location = strings.TrimSpace(m.Title), strings.TrimSpace(m.Location)
 			if m.Format == "moment" && m.Title == "" {
-				first, _, _ := strings.Cut(m.Content, "\n")
+				first, _, _ := strings.Cut(strings.TrimSpace(m.Content), "\n")
 				m.Title = string([]rune(first)[:min(60, utf8.RuneCountInString(first))])
 			}
-			limit := 300
+			limit := 1024
 			if m.Format == "post" {
 				limit = 10000
 			}
@@ -48,12 +49,16 @@ func RegisterMoments(a *sdk.App, g *route.Registrar) {
 				!slices.Contains([]string{"general", "help", "showcase", "ai"}, m.Board) {
 				return errors.New("内容形式或板块不合法")
 			}
-			if m.Content == "" || (m.Format == "post" && m.Title == "") ||
+			if strings.TrimSpace(m.Content) == "" || (m.Format == "post" && m.Title == "") ||
 				utf8.RuneCountInString(m.Title) > 100 || utf8.RuneCountInString(m.Content) > limit ||
 				utf8.RuneCountInString(m.Location) > 200 {
 				return errors.New("标题或内容不合法")
 			}
+			media := momentcontent.ParseMedia(m.Content)
 			if m.Format != "post" {
+				if media.Inline {
+					return errors.New("动态正文不能包含图片或视频")
+				}
 				m.IsAnonymous = false
 			}
 			if m.Images == "" {
@@ -62,6 +67,9 @@ func RegisterMoments(a *sdk.App, g *route.Registrar) {
 			var images []uint
 			if json.Unmarshal([]byte(m.Images), &images) != nil || len(images) > 9 {
 				return errors.New("图片列表不合法")
+			}
+			if !validMomentImages(a.DB, append(images, media.IDs...)) {
+				return errors.New("图片附件不存在或格式不支持")
 			}
 			if !userExists(a.DB, m.UserID) {
 				return errors.New("发布用户不存在")
@@ -74,10 +82,12 @@ func RegisterMoments(a *sdk.App, g *route.Registrar) {
 		return a.DB.WithContext(c.Request.Context()).Model(&models.MomentComment{})
 	}
 	validate := func(row *models.MomentComment) error {
-		row.Content = strings.TrimSpace(row.Content)
 		var count int64
-		if row.Content == "" || utf8.RuneCountInString(row.Content) > 300 || utf8.RuneCountInString(row.Region) > 100 {
+		if strings.TrimSpace(row.Content) == "" || utf8.RuneCountInString(row.Content) > 1024 || utf8.RuneCountInString(row.Region) > 100 {
 			return errors.New("评论内容不合法")
+		}
+		if !validMomentImages(a.DB, momentcontent.ParseMedia(row.Content).IDs) {
+			return errors.New("图片附件不存在或格式不支持")
 		}
 		if row.MomentID == 0 || a.DB.Model(&models.Moment{}).Where("id = ?", row.MomentID).Count(&count).Error != nil || count == 0 {
 			return errors.New("动态不存在")
@@ -198,4 +208,14 @@ func RegisterMoments(a *sdk.App, g *route.Registrar) {
 func userExists(db *gorm.DB, id uint) bool {
 	var count int64
 	return id != 0 && db.Model(&sysmodels.User{}).Where("id = ?", id).Count(&count).Error == nil && count > 0
+}
+
+func validMomentImages(db *gorm.DB, ids []uint) bool {
+	if len(ids) == 0 {
+		return true
+	}
+	slices.Sort(ids)
+	ids = slices.Compact(ids)
+	var count int64
+	return momentcontent.Images(db, ids).Count(&count).Error == nil && count == int64(len(ids))
 }

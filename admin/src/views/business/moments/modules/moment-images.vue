@@ -1,98 +1,186 @@
 <template>
   <div class="moment-images">
     <div v-for="id in ids" :key="id" class="moment-image">
-      <img v-if="thumbs[id]" :src="thumbs[id]" :alt="`图片 ${id}`" @click="preview(thumbs[id])" />
-      <span v-else class="moment-image-loading">加载中…</span>
-      <span class="moment-image-id">#{{ id }}</span>
-      <button type="button" class="moment-image-remove" title="移除" @click="remove(id)">×</button>
+      <button v-if="images[id]" type="button" class="moment-image-preview" @click="preview = id">
+        <img :src="images[id].url" :alt="images[id].name || ''" />
+      </button>
+      <span v-else>#{{ id }}</span>
+      <button
+        type="button"
+        class="moment-image-remove"
+        :aria-label="t('移除图片')"
+        @click="write(ids.filter((item) => item !== id))"
+        >×</button
+      >
     </div>
-    <label class="moment-image-add" title="上传图片">
-      <span class="moment-image-plus">＋</span>
-      <span>添加图片</span>
-      <input type="file" accept="image/jpeg,image/png,image/gif,image/webp" multiple @change="add" />
-    </label>
-    <Teleport to="body">
-      <div v-if="viewerVisible" class="moment-images-viewer">
-        <!-- 不写死 z-index：ElImageViewer 会自己 nextZIndex()，始终盖在 ElDialog 之上。 -->
-        <ElImageViewer
-          :url-list="viewerUrls"
-          :initial-index="viewerIndex"
-          @close="viewerVisible = false"
-        />
-      </div>
-    </Teleport>
+    <ElButton plain @click="open">{{ t('添加图片') }}</ElButton>
   </div>
+  <ElDialog v-model="visible" :title="t('图库图片')" width="min(480px, 95vw)" append-to-body>
+    <div class="moment-image-tools">
+      <ElInput v-model="keyword" :placeholder="t('搜索图片')" @input="loadLibrary" />
+      <ElButton :loading="uploading" @click="fileInput?.click()">{{ t('上传图片') }}</ElButton>
+      <input ref="fileInput" type="file" :accept="imageTypes" multiple hidden @change="upload" />
+    </div>
+    <div v-loading="loading" class="moment-images">
+      <button
+        v-for="image in library"
+        :key="image.id"
+        type="button"
+        class="moment-image-preview"
+        :title="image.name"
+        @click="add([Number(image.id)])"
+      >
+        <img :src="image.url" :alt="image.name || ''" />
+      </button>
+      <span v-if="!loading && !library.length">{{ t('暂无图片') }}</span>
+    </div>
+  </ElDialog>
+  <ElImageViewer
+    v-if="preview"
+    :url-list="viewerIDs.map((id) => images[id].url)"
+    :initial-index="viewerIDs.indexOf(preview)"
+    teleported
+    @close="preview = 0"
+  />
 </template>
+
 <script setup lang="ts">
-  import { computed, reactive, ref, watch } from 'vue'
-  import { ElImageViewer } from 'element-plus'
-  import { request } from '@dawnim/admin'
-  import { attachmentURL, parseImages } from './attachments'
+  import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
+  import { useI18n } from 'vue-i18n'
+  import { ElButton, ElDialog, ElImageViewer, ElInput, ElMessage, vLoading } from 'element-plus'
+  import type { EditorImage } from '@dawnim/admin'
+  import { imageLibrary, imageTypes, imageUploader, loadImage, parseImages } from './attachments'
 
-  const props = defineProps<{ modelValue?: string; recordId?: number }>()
+  const props = defineProps<{ modelValue?: string }>()
   const emit = defineEmits<{ 'update:modelValue': [string] }>()
-  const thumbs = reactive<Record<number, string>>({})
+  const { t } = useI18n()
+  const images = reactive<Record<number, EditorImage>>({})
   const ids = computed(() => parseImages(props.modelValue))
-  const viewerVisible = ref(false)
-  const viewerIndex = ref(0)
-  const viewerUrls = ref<string[]>([])
+  const viewerIDs = computed(() => ids.value.filter((id) => images[id]))
+  const preview = ref(0)
+  const visible = ref(false)
+  const keyword = ref('')
+  const loading = ref(false)
+  const uploading = ref(false)
+  const fileInput = ref<HTMLInputElement>()
+  const library = ref<EditorImage[]>([])
+  let searchVersion = 0
+  let mounted = true
 
-  function write(next: number[]) {
-    emit('update:modelValue', JSON.stringify(next))
+  const write = (next: number[]) => emit('update:modelValue', JSON.stringify(next))
+  watch(
+    ids,
+    (next) => {
+      for (const id of next)
+        void loadImage(id)
+          .then((image) => {
+            images[id] = image
+          })
+          .catch(() => {})
+    },
+    { immediate: true }
+  )
+
+  function add(selected: number[]) {
+    const next = [...new Set([...ids.value, ...selected])]
+    if (next.length > 9) {
+      ElMessage.warning(t('最多选择9张图片'))
+      return
+    }
+    write(next)
+    visible.value = false
   }
-  async function load() {
-    for (const id of ids.value) {
-      if (thumbs[id]) continue
-      try {
-        thumbs[id] = await attachmentURL(id)
-      } catch {
-        delete thumbs[id]
-      }
+  async function loadLibrary() {
+    const version = ++searchVersion
+    loading.value = true
+    try {
+      const rows = await imageLibrary.list(keyword.value)
+      if (version === searchVersion) library.value = rows
+    } catch {
+      if (version === searchVersion) library.value = []
+    } finally {
+      if (version === searchVersion) loading.value = false
     }
   }
-  watch(ids, load, { immediate: true })
-
-  async function add(event: Event) {
+  function open() {
+    visible.value = true
+    keyword.value = ''
+    void loadLibrary()
+  }
+  async function upload(event: Event) {
     const input = event.target as HTMLInputElement
-    const next = ids.value.slice()
-    for (const file of Array.from(input.files || [])) {
-      const form = new FormData()
-      form.append('file', file)
-      const row = await request.post<{ id: number }>({ url: '/attachments', data: form, timeout: 120000 })
-      next.push(row.id)
-    }
+    const files = Array.from(input.files || [])
     input.value = ''
-    if (next.length !== ids.value.length) write(next)
+    if (!files.length || uploading.value) return
+    if (files.length + ids.value.length > 9) {
+      ElMessage.warning(t('最多选择9张图片'))
+      return
+    }
+    uploading.value = true
+    try {
+      const prints = await Promise.all(files.map(imageUploader.fingerprint!))
+      const hits = await imageUploader.check!(files, prints)
+      const missing = files.filter((_, index) => !hits[index])
+      const uploaded = await imageUploader.upload(
+        missing,
+        prints.filter((_, index) => !hits[index])
+      )
+      if (mounted && visible.value) add(hits.map((hit) => Number((hit || uploaded.shift()!).id)))
+    } catch {
+      if (mounted) ElMessage.error(t('上传失败'))
+    } finally {
+      uploading.value = false
+    }
   }
-  function remove(id: number) {
-    write(ids.value.filter((item) => item !== id))
-  }
-  function preview(url: string) {
-    // 浮层查看，且把整组图片交给查看器，可左右切换，不再开新窗口。
-    const list = ids.value.map((id) => thumbs[id]).filter((item): item is string => !!item)
-    viewerUrls.value = list
-    viewerIndex.value = Math.max(0, list.indexOf(url))
-    viewerVisible.value = true
-  }
+  onBeforeUnmount(() => {
+    mounted = false
+  })
 </script>
+
 <style scoped>
-.moment-images { display: flex; flex-wrap: wrap; gap: 10px; width: 100%; }
-.moment-image, .moment-image-add {
-  position: relative; display: grid; place-items: center; width: 92px; height: 92px;
-  border: 1px solid var(--el-border-color, #dcdfe6); border-radius: 8px; overflow: hidden;
-}
-.moment-image img { width: 100%; height: 100%; object-fit: cover; cursor: zoom-in; }
-.moment-image-loading, .moment-image-id { font-size: 11px; color: var(--el-text-color-secondary, #909399); }
-.moment-image-id { position: absolute; bottom: 2px; left: 4px; padding: 0 4px; border-radius: 4px; background: #0008; color: #fff; }
-.moment-image-remove {
-  position: absolute; top: 2px; right: 2px; width: 20px; height: 20px; border: 0; border-radius: 50%;
-  background: #0009; color: #fff; font-size: 15px; line-height: 18px; cursor: pointer;
-}
-.moment-image-add { gap: 2px; border-style: dashed; color: var(--el-text-color-secondary, #909399); font-size: 11px; cursor: pointer; }
-.moment-image-plus { font-size: 20px; line-height: 1; }
-.moment-image-add input { display: none; }
-</style>
-<style>
-/* 同 moment-editor：避免内置浏览器里 viewer-fade 卡在 enter-from 导致整层透明。 */
-.moment-images-viewer .el-image-viewer__wrapper { opacity: 1 !important; }
+  .moment-images {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+  }
+  .moment-image {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 60px;
+    height: 60px;
+    border: 1px solid var(--el-border-color);
+    border-radius: 8px;
+  }
+  .moment-image-preview {
+    display: block;
+    padding: 0;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: zoom-in;
+  }
+  .moment-image-preview img {
+    display: block;
+    width: 58px;
+    height: 58px;
+    object-fit: cover;
+  }
+  .moment-image-remove {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #000a;
+    color: white;
+    cursor: pointer;
+  }
+  .moment-image-tools {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
 </style>
