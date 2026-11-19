@@ -11,7 +11,7 @@ Start with [dawn-simple](https://github.com/dawnim/dawn-simple) and extend its m
 | [Quick start](quickstart.md) | Project naming, requirements, installation, and first run |
 | [Create a project](create-project.md) | Integrate the backend and frontend libraries into a new application |
 | [Architecture](architecture.md) | Framework relationships, directories, and application lifecycle |
-| [Community example](moments.md) | A complete example using users, files, GeoIP, AI, chat, and realtime events |
+| [Forum development example](moments.md) | A complete example using users, files, GeoIP, AI, chat, and realtime events |
 
 ## Development
 

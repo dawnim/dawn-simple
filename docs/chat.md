@@ -78,7 +78,7 @@ const socket = new WebSocket(new URL(ws_url, location.href))
 socket.onopen = () => socket.send(JSON.stringify({ type: 'auth', ticket }))
 ```
 
-`resume`首次省略，重连时传入`ready.data.resume`。收到事件后按`channel/id`去重并发送`ack`；`resync_required`时重新获取业务列表。票据等待当前身份同步完成，只能使用一次。`onSessionChange({user, verified})`在身份同步后通知接入方，业务应清空旧账号状态并重新连接；退出时关闭业务WS。菜单、聊天面板与业务接口由接入项目实现，服务端仍检查成员权限。完整流程见[网站动态开发实例](moments.md)。
+`resume`首次省略，重连时传入`ready.data.resume`。收到事件后按`channel/id`去重并发送`ack`；`resync_required`时重新获取业务列表。票据等待当前身份同步完成，只能使用一次。`onSessionChange({user, verified})`在身份同步后通知接入方，业务应清空旧账号状态并重新连接；退出时关闭业务WS。菜单、聊天面板与业务接口由接入项目实现，服务端仍检查成员权限。完整流程见[论坛动态开发实例](moments.md)。
 
 ## 访客恢复与资料
 

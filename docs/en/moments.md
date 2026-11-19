@@ -1,21 +1,23 @@
-# Community example
+# Forum development example
 
-The website root `/` is the community feed. `/dawn` keeps the product introduction, whose Start building button opens the docs. The clean three-column layout takes inspiration from Rhex and supports mobile, light/dark themes, and Chinese/English.
+The forum runs at `/`. The product introduction and docs entry are at `/dawn`. Simple implements the forum, its APIs, and admin pages, and uses Dawn extensions for identity, files, GeoIP, AI, and realtime chat.
 
-## Features and identity
+## Browsing and posting
 
-Anyone can browse boards, search, activity/new/popular ordering, pagination, and post details. The website and support reuse one guest identity. Complete registration to publish, upload images, comment, reply, or chat. Public pages show `unique_id` as the user number.
+Guests can browse boards, search, and open topic details. The site and support widget share guest identity. Registered users can post, upload images, reply, and chat. Public pages use `unique_id` as the user number.
 
-The composer supports Moment and Post modes. Moment is selected by default for short text. Post mode adds a title, a two-pane Markdown editor, syntax-highlighted code, and live preview. The editor matches Rhex 1:1: 17 toolbar items (Rhex lock/encryption stays disabled by design), three preview views, fullscreen, line numbers, a floating selection toolbar, @mention autocomplete, and the full shortcut set. `Enter` continues lists, `Tab`/`Shift+Tab` changes indentation, `Alt+Up/Down` moves table rows, and drafts persist in `localStorage` with `Cmd/Ctrl+S`. Rendering also matches Rhex: markdown-it plugins cover footnotes, definition lists, abbreviations, super/subscript, inserted text, highlights, task lists, KaTeX math, callouts, and collapsible spoilers, plus click-to-reveal masks, `@user` links, custom emoji shortcodes, media markers, and Mermaid diagrams. Code blocks have language headers, copy buttons, and real highlight colors; headings get anchor IDs. Multi-block permission content, polls, lotteries, and paid attachments are Rhex business features and are not ported. Body images can be selected, pasted, or dropped, use the shared attachment upload endpoint, and are inserted at the cursor, while Moment mode keeps the WeChat-style “+” image grid. Moments allow 300 characters and posts allow 10,000. Authors can edit and soft-delete their own posts: both list rows and the detail page show Edit/Delete according to the server-side `can_manage` flag, backed by `PUT /api/moments/{id}` and `DELETE /api/moments/{id}` (which only writes `deleted_at`; the row, comments and reactions stay, and GORM hides deleted rows from lists and details). Deleting from a list refreshes in place; deleting from a detail page returns to the list. The gray region beside the author comes from server-side IP lookup: city, then province, then country, or Unknown. The location field is filled with the current IP region when the composer opens and remains editable. Comments also display the server-derived region.
+| Tab | List behavior |
+|---|---|
+| New posts | Default tab, most recently published first |
+| New replies | Topics with at least one visible comment, latest comment first |
+| Hot posts | Highest score first: comment count × 3 + flowers + eggs |
+| Mine | Signed-in user's posts, most recently published first |
 
-Posts can be anonymous. The database keeps the real `user_id` for owner deletion, quotas, and administration, while public responses show “Anonymous user”; the required region remains visible. Moments do not expose the anonymous switch.
-Anonymous posts use an anonymous sender in the chat hall, and comments do not open a private notification that would reveal the author.
+The composer opens in Moment mode, with a 1,024-character body limit. Post mode adds a title, anonymous publishing, and live Markdown preview, with a 10,000-character body limit. Both formats support a board, up to nine gallery images, and a location. The composer defaults to the current IP region, and the server supplies the region shown beside authors and comments.
 
-Images on both list and detail pages open in a themed lightbox with double-click zoom, outside-click close, and a floating close button. The profile card uses the current request IP region and does not add a `last_ip` column to users.
+The API returns `can_manage` for edit and delete buttons and checks ownership on writes. Topics and comments use soft deletion. Anonymous posts show “Anonymous user” in public, while the server keeps `user_id` for administration and quotas. Anonymous topics enter the chat hall with an anonymous sender, and replies respect the topic's anonymity.
 
-Comments can reply to the post or another comment. Posts and comments use millisecond soft deletion; old chat cards remain, while deleted content opens a not-found message. Repeated flowers and eggs accumulate in one row per user/post without a notification for every click.
-
-The Chat list pins the site-wide hall above recent private conversations. New posts appear in the hall. Comments and replies create cards in the participants' private chat, linking to the original post or comment; they can continue talking there. Guests may read the hall; members can send messages. Drafts persist per conversation and clear on identity change. History pagination, unread badges, monotonic read positions, and connection recovery are included.
+Comments can reply to a topic or another comment. Flowers and eggs accumulate per user and topic. The Chat list pins the public hall, which receives cards for new topics. Comments and replies can send private chat cards linking back to the discussion. Guests can read the hall, and registered users can send messages. Chat supports paginated history, unread indicators, and reconnection.
 
 ## Tables and code
 
@@ -46,13 +48,13 @@ The admin menu is Customer service → Community moments, below Visitor manageme
 
 Posts use the framework generic `crud.RegisterResource[models.Moment]` directly; only `Validate` adds format/board enums, title and length limits, the `images` JSON with a nine-image cap, and an existing-publisher check. Comments need exact `moment_id` and `user_id` filters (the framework default is LIKE), so only `ResourceHandlers.Index` is hand-written; `Show/Store/Update/Destroy` still reuse `BindResourceInput`, `CreateResource`, and `RegisterResourceRoutes`. Comment validation checks the post exists, the user exists, the reply target belongs to the same post, and the body length. Comments get no separate menu: all eight `app.moments.*` and `app.moment_comments.*` permissions hang from the `app.moments` node, and `hasAuth` controls button visibility.
 
-This admin round added three generic extension capabilities: `CrudPage.actionWidth` (default 100, set to 220 for the Comments button), `formWidth` (dialog width, 1100px for the editor), and `Column.formSlot` (render one field through a named slot supplied by the page). Lists, toolbars, pagination, and permission checks stay in the framework; all business logic stays in simple.
+The admin uses `CrudPage.actionWidth` and `formWidth` to size the action column and form. `Column.formSlot` binds a field to a named Vue slot in the page, which mounts the body editor or the gallery control.
 
 ## Editor and attachments
 
-The site and admin mount the same editor and use Simple's Markdown renderer. Short moments have a 1,024-character limit and use the separate gallery. Posts allow 10,000 characters and enable inline image and media tools and image paste. Gallery images live in the `images` field and have their own upload and history picker.
+The site and admin reuse Dawn's Markdown editor and Simple's renderer. Simple selects image and media tools and enables image paste according to the post format. When inserting an image into the body, the editor calls Simple's uploader and inserts the returned markup. Simple manages the separate gallery, where users can upload or select existing images. Gallery IDs are saved in `images`.
 
-Simple inserts `[attachment://123]` for an inline upload. Posts and comments also support standard Markdown images. When rendering an attachment, Simple uses the attachment name, initially the original filename, as `alt` and resolves the URL for the current surface. Published images load without signing in. The detail page renders a gallery image once if it is already in the body. Editing retains its gallery entry, so it reappears below the body if the inline reference is removed.
+Standard Markdown images use `![alt text](image-url)`. Simple uses `[attachment://123]` for its own inline attachments. The renderer uses the attachment filename as `alt` and resolves the URL for the current record. Published images are publicly readable. The detail page skips gallery images already rendered in the body while preserving `images`. If the inline reference is removed, the image appears in the gallery again.
 
 See [Markdown editor](editor.md) for the application extension points.
 
@@ -67,25 +69,14 @@ See [Markdown editor](editor.md) for the application extension points.
 
 Install the renderer dependencies with `npm --prefix tools ci` before building either frontend. Run `sh tools/build_moment_markdown.sh` to copy the installed editor CSS and bundle the browser editor and Simple renderer for Go embedding. The admin imports the same renderer source.
 
-The community hall reuses the same `DawnMomentMarkdown` engine: message bodies are rendered and passed to `enhanceMarkdown`, while conversation previews use the plain text of the rendered HTML with spoilers replaced by `•••`. Scoping nickname and card-link styles as `.chat-message > strong/button` keeps the site's global form styles from leaking into Markdown elements; headings, paragraphs, and code blocks are tightened inside the bubble. On desktop a `pointerdown` outside the panel closes it, matching the support widget; mobile stays open, and clicks inside the documentation iframe use the existing `postMessage` channel.
+Chat messages reuse the same Markdown renderer. DOMPurify sanitizes the rendered HTML, with allowlists for image URLs and media iframe sources. Run `npm --prefix tools test` to check syntax, HTML sanitization, and bundle integrity.
 
-`//go:embed assets/*` only matches top-level files. New JS/CSS must be flat in `app/web/assets/`, added to the allowlist and sha256 version list in `app/web/web.go`, linked from `index.html`, and followed by a Go rebuild.
-
-DOMPurify enforces the security boundary: `script/style/form/object`, event handlers, and inline styles are forbidden; `iframe src` is additionally checked against Bilibili, NetEase Cloud Music, YouTube, Tencent Video, and similar hosts; images accept site paths, `blob:`, and `http(s)` only. `html:true` therefore admits only the restricted HTML Rhex allows (`<u>`, `<center>`, `<p align>`, ruby, ...), which fixes the earlier escaped underline button and invalid `<p><div>` nesting without opening script injection. `node --test` in `tools/` covers syntax golden cases, eight XSS vectors, and bundle integrity; CI runs it in a dedicated job.
-
-Admin System settings → Community configures the editor directly, with no new page:
-
-| Setting | Format | Purpose |
-|---|---|---|
-| `moments.toolbar_hidden` | `media,alignment` | Hide buttons by Rhex tool key; empty shows all |
-| `moments.emoji_shortcodes` | one `party=🎉` per line | Custom shortcodes resolved by the renderer when `:party:` is typed by hand; the emoji picker does not read this setting |
-
-`GET /api/moment-config` delivers toolbar visibility and custom shortcodes (the latter only for legacy rendering), and `GET /api/mentions/search?q=` supplies mention candidates. The editor help covers general Markdown syntax.
+`GET /api/moment-config` provides toolbar settings and custom emoji shortcodes, and `GET /api/mentions/search?q=` provides mention suggestions. `moments.emoji_shortcodes` resolves shortcodes typed in the body. The editor picker uses its built-in emoji data.
 
 ```mermaid
 flowchart LR
-  A[Extension enhancement and styles] --> C[tools esbuild bundle]
-  B[simple render rules and editor] --> C
+  A[dawn-admin editor and styles] --> C[tools esbuild bundle]
+  B[Simple Markdown renderer] --> C
   C --> D[Flat committed artifacts]
   D --> E[Go embed allowlist and versioning]
   E --> F[Website browser]
@@ -95,7 +86,7 @@ flowchart LR
 
 Identity uses the extension's Session and single-use identity tickets instead of another login system. See [bidirectional identity](support-identity.md).
 
-Images call `Controller.CheckUpload` with MD5, SHA-256, and size. A hit returns an attachment ID; otherwise `SaveUpload` uploads the bytes. Shared policies apply, and the unified file center stores user-scoped ownership. Publishing verifies every image belongs to the current user. Public image reads only serve attachments referenced by the post. See [attachment uploads](backend.md#reusing-attachment-uploads).
+Images call `Controller.CheckUpload` with MD5, SHA-256, and size. A hit returns an attachment ID; otherwise `SaveUpload` uploads the bytes. Shared policies apply, and the unified file center stores user-scoped ownership. Public publishing and replies validate attachment ownership. The image endpoint for each post or comment serves attachments referenced by that record. See [attachment uploads](backend.md#reusing-attachment-uploads).
 
 ```mermaid
 sequenceDiagram
@@ -129,20 +120,22 @@ Admin System settings → Community provides:
 
 Daily publishing quotas use the site process timezone, including deleted posts. Manual AI requests atomically reserve Redis quota before generation; failed requests also consume quota to prevent repeated model calls. Manual and automatic quotas are separate.
 
-While reading documentation, Create with AI generates an editable draft of up to 300 characters from the current article. The user reviews and publishes it under their own account. Model calls reuse `Customer.GenerateText` and the `dawn` support application's configured protocol, model, and key. Model credentials never reach the browser.
+While reading documentation, Create with AI generates an editable draft from the current article. The user reviews and publishes it under their own account. Model calls reuse `Customer.GenerateText` and the `dawn` support application's configured protocol, model, and key. Model credentials never reach the browser.
 
 An automatic job enters the existing serial queue every six hours. It samples recent documentation visits and coarse regions, then publishes a playful AI-first-person post under the labeled AI account, once a day by default. A configured Brave key adds recent technology stories; search failure falls back to documentation. With no readings or a zero automatic quota, nothing is generated.
 
 ## Running and reusing
 
-For a fresh installation, follow [Quick start](quickstart.md). To deploy this version into an existing application, update schema and initialization definitions from the application root:
+For a fresh installation, follow [Quick start](quickstart.md). For local development, install dependencies, update the schema, and start services from the application root.
 
 ```sh
 go run . migrate
 go run . db:seed
 npm --prefix tools ci
 npm --prefix tools test
+pnpm --dir docs install --frozen-lockfile
 pnpm --dir docs build:all
+pnpm --dir admin install --frozen-lockfile
 pnpm --dir admin build
 go run . dawn:start local
 ```

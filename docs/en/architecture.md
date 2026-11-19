@@ -11,28 +11,144 @@ flowchart TD
     B --> F[(SQL / Redis / File storage)]
 ```
 
-## Application directories
+## Repository layouts
 
-| Path | Responsibility |
-|---|---|
-| `main.go`, `bootstrap/` | Command entry point, providers, routes, and migrations |
-| `app/admin/menu.go` | Code menus, permissions, cache, and realtime extensions |
-| `app/admin/routes.go` | Admin business routes |
-| `app/admin/controllers/`, `middleware/` | Business requests and middleware |
-| `app/web` | Website, community and business chat endpoints |
-| `app/models/` | Shared entities, one file per entity |
-| `app/constants/` | Business cache definitions and queue names |
-| `app/providers/` | Container bindings, drivers, listeners, and translations |
-| `app/cmd/`, `app/schedule/` | Custom commands and schedules |
-| `routes/api.go` | Public business APIs |
-| `database/migrations/`, `database/seeders/` | Schema migrations and base data |
-| `config/` | Startup configuration organized by component namespace |
-| `admin/src/` | Business pages, APIs, header components, and dashboards |
-| `docs/` | Developer documentation |
+### dawn-simple
 
-Add `app/events`, `app/listeners`, and `app/jobs` as needed. Shared business operations may go in `app/services`; keep simple logic directly in its controller.
+The application. Its Go backend uses `dawn-server` and its admin frontend uses `@dawnim/admin`.
 
-Define feature menus and permissions in code and deliver them with each version. Menus, pages, and APIs are reviewed and deployed together; role grants remain managed in the admin interface. Maintain external links and other custom entries through menu management.
+```text
+dawn-simple/
+|-- .github/                  # CI and documentation publishing
+|-- main.go                   # Application command entry point
+|-- bootstrap/                # Application, provider, and extension setup
+|   |-- app.go                # Routes, commands, schedules, and migrations
+|   |-- extensions.go         # Dawn extension and business model registration
+|   `-- providers.go          # Application service providers
+|-- app/
+|   |-- admin/                # Admin business integration
+|   |   |-- controllers/      # Admin APIs for posts and comments
+|   |   |-- menu.go           # Admin menus, permissions, and settings
+|   |   `-- routes.go         # Admin business routes
+|   |-- cmd/                  # Application commands
+|   |-- constants/            # Business cache keys and queue names
+|   |-- exceptions/           # Application exception handling
+|   |-- models/               # Forum business models
+|   |-- momentcontent/        # Inline attachment parsing
+|   |-- providers/            # Business service and translation registration
+|   |-- schedule/             # Scheduled task registration
+|   `-- web/                  # Website, forum, and chat APIs
+|       `-- assets/           # Website assets embedded in Go
+|-- admin/
+|   `-- src/                  # Vue admin application
+|       |-- main.ts           # Admin application entry point
+|       |-- api/              # Business API clients
+|       |-- assets/           # Application assets
+|       |-- components/       # Shared application components
+|       |-- locales/          # Business UI translations
+|       `-- views/            # Business pages
+|-- config/                   # Application and component configuration
+|-- database/
+|   |-- migrations/           # Business schema migrations
+|   `-- seeders/              # Business seed data
+|-- routes/
+|   `-- api.go                # Public application routes
+|-- docs/                     # Chinese guides and documentation site
+|   |-- .vitepress/           # Build configuration, navigation, and theme
+|   |-- en/                   # English guides
+|   |-- prismgo/              # PrismGo documentation submodule
+|   `-- public/               # Documentation assets
+|-- public/                   # HTTP static files and built website docs
+|-- storage/                  # Local runtime files
+|-- tools/                    # Forum Markdown rendering, bundling, and tests
+|-- go.mod                    # Go dependencies and versions
+|-- nginx.conf                # Nginx deployment example
+`-- supervisord*.conf         # Service process configuration examples
+```
+
+### dawn-server
+
+The Go extension for PrismGo, providing admin APIs, public identity, files, chat, and service management.
+
+```text
+dawn-server/
+|-- .github/                  # CI and releases
+|-- provider.go               # PrismGo service provider and route entry point
+|-- console.go                # Dawn command execution and service lifecycle
+|-- app/
+|   |-- admin/                # Admin runtime and public extension options
+|   |   |-- controllers/      # Admin resources and reusable CRUD
+|   |   |-- middleware/       # Authentication and authorization middleware
+|   |   `-- response/         # HTTP response conventions
+|   |-- cmd/                  # Install, code generation, schema, and service commands
+|   |-- models/               # Extension models for users, permissions, files, and chat
+|   `-- providers/            # Admin services, commands, and dependency bindings
+|-- constants/                # Extension constants and cache keys
+|-- database/
+|   |-- migrations/           # Extension database migrations
+|   |-- schema/               # Schema definition, checks, and synchronization
+|   `-- seeders/              # Initial admin data
+|-- realtime/                 # WebSocket connections and realtime message hub
+|-- resources/
+|   `-- prismgo-lens/         # Admin guidelines for PrismGo Lens
+|-- routes/
+|   `-- admin.go              # Admin and extension route registration
+|-- support/
+|   |-- authsession/          # Authentication sessions
+|   |-- codegen/              # Resource code generator and templates
+|   |-- customer/             # Customer support, chat, and AI
+|   |-- geoip/                # IP geolocation
+|   |-- i18n/                 # Translation and localization
+|   |-- identity/             # Public identity and tickets
+|   |-- settings/             # Runtime settings
+|   |-- storage/              # File storage integration
+|   `-- supervisor/           # Service processes and lifecycle management
+|-- tests/                    # Integration tests and fixtures
+|-- tools/
+|   `-- embedding/            # Embedding model tooling
+`-- go.mod                    # Go module, PrismGo, and other dependencies
+```
+
+### dawn-admin
+
+The Vue admin library, published as `@dawnim/admin`, with a standalone Markdown editor.
+
+```text
+dawn-admin/
+|-- .github/                  # CI and releases
+|-- scripts/                  # Standalone editor and chat widget build scripts
+|-- src/
+|   |-- index.ts              # Public entry points including createAdmin
+|   |-- api/                  # Framework admin API clients
+|   |-- assets/               # Images, SVGs, and shared styles
+|   |-- components/           # Layout, table, form, and Dawn components
+|   |-- composables/          # Reusable composition logic
+|   |-- config/               # Admin defaults
+|   |-- dawn/                 # Shared Dawn frontend features
+|   |   |-- CrudPage.vue      # Reusable resource management page
+|   |   |-- Upload.vue        # Shared upload component
+|   |   |-- crud/             # CRUD forms, filters, and lists
+|   |   |-- editor.ts         # Standalone Markdown editor
+|   |   |-- editor-bundle.ts  # Standalone editor bundle entry
+|   |   |-- markdown.ts       # Default rendering and DOM enhancement
+|   |   |-- chat.ts           # Admin chat integration
+|   |   |-- realtime.ts       # Realtime connections and events
+|   |   `-- lang/             # Shared component translations
+|   |-- directives/           # Vue directives
+|   |-- enums/                # Shared enumerations
+|   |-- hooks/                # Table and UI hooks
+|   |-- locales/              # Admin interface translations
+|   |-- plugins/              # Third-party frontend plugin configuration
+|   |-- router/               # Routing, navigation, and access control
+|   |-- store/                # Pinia stores
+|   |-- types/                # Frontend source types
+|   |-- utils/                # Requests and utilities
+|   `-- views/                # Built-in admin pages
+|-- tests/                    # Component and runtime tests
+|-- types/                    # Type declarations shipped with the npm package
+|-- package.json              # npm dependencies and public subpaths
+`-- vite.config.ts            # Development and bundling configuration
+```
 
 ## Application lifecycle
 

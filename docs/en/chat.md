@@ -78,7 +78,7 @@ const socket = new WebSocket(new URL(ws_url, location.href))
 socket.onopen = () => socket.send(JSON.stringify({ type: 'auth', ticket }))
 ```
 
-Omit `resume` initially and use `ready.data.resume` when reconnecting. Deduplicate events by `channel/id` and send `ack`; refetch business state on `resync_required`. Ticket creation waits for identity synchronization and each ticket works once. `onSessionChange({user, verified})` notifies the host after synchronization: discard the previous account's state and reconnect. Close business sockets on logout. The host owns its menus, chat panel, and APIs, with server-side member authorization. See the [community example](moments.md) for the complete flow.
+Omit `resume` initially and use `ready.data.resume` when reconnecting. Deduplicate events by `channel/id` and send `ack`; refetch business state on `resync_required`. Ticket creation waits for identity synchronization and each ticket works once. `onSessionChange({user, verified})` notifies the host after synchronization: discard the previous account's state and reconnect. Close business sockets on logout. The host owns its menus, chat panel, and APIs, with server-side member authorization. See the [forum development example](moments.md) for the complete flow.
 
 ## Visitor recovery and attributes
 

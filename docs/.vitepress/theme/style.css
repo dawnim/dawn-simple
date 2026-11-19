@@ -132,48 +132,49 @@
 .diagram-expand,
 .diagram-close {
   position: absolute;
-  top: 8px;
+  top: 6px;
   right: 8px;
-  padding: 6px;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
   color: var(--vp-c-text-2);
   border: 1px solid var(--vp-c-divider);
-  border-radius: 6px;
+  border-radius: 50%;
   background: var(--vp-c-bg);
   cursor: pointer;
 }
 
-.diagram-expand svg {
-  width: 20px;
-  height: 20px;
+.diagram-expand:hover,
+.diagram-close:hover {
+  color: var(--vp-c-text-1);
+  border-color: var(--vp-c-brand-1);
+}
+
+.diagram-expand svg,
+.diagram-close svg {
+  width: 15px;
+  height: 15px;
 }
 
 .diagram-modal {
-  width: calc(100vw - 32px);
-  height: calc(100vh - 32px);
+  width: fit-content;
   max-width: none;
   max-height: none;
   margin: auto;
-  padding: 56px 24px 24px;
-  overflow: auto;
+  padding: 36px 12px;
   color: var(--vp-c-text-1);
   border: 1px solid var(--vp-c-divider);
   border-radius: 12px;
   background: var(--vp-c-bg);
 }
 
+.diagram-modal .mermaid {
+  width: min(1200px, calc(100dvw - 58px), calc((100dvh - 106px) * var(--diagram-ratio)));
+}
+
 .diagram-modal::backdrop {
   background: rgb(0 0 0 / 60%);
-}
-
-.diagram-close {
-  top: 12px;
-  right: 16px;
-  padding: 6px 12px;
-}
-
-.diagram-close kbd {
-  margin-left: 6px;
-  font-size: 12px;
 }
 
 @media (max-width: 639px) {

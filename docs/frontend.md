@@ -188,7 +188,7 @@ TypeScript 使用 `moduleResolution: Bundler` 并包含 `vite/client` 类型。�
 
 后端HTTP服务的`/`是网友动态首页，提供发帖、图片、评论、鲜花/鸡蛋互动、AI快捷创作和聊天；`/dawn`保留Dawn介绍页、登录注册及在线客服。后台前端使用自己的前端服务或域名。官网源码在`app/web/assets`，随Go二进制内嵌，修改后重新构建后端。
 
-官网资源由`//go:embed assets/*`内嵌，只匹配顶层文件。新增JS/CSS需要四步：平铺放进`app/web/assets/`、在`app/web/web.go`的资源白名单与sha256版本列表登记、在`index.html`引入、重新编译Go二进制。帖子Markdown资源由`tools/`自包含npm工程生成：`npm --prefix tools ci`安装依赖，`sh tools/build_moment_markdown.sh`把渲染规则和扩展的`enhanceMarkdown`打包成`moment-markdown.js`，并从扩展复制`moment-markdown.css`；两份产物提交入库，`npm --prefix tools test`校验语法、XSS与产物完整性。`dev`分支通过`link:`解析扩展源码重建，`main`分支使用公共包与已提交产物。后台同样使用该渲染器，构建前先执行 `npm --prefix tools ci`。详见[网站动态开发实例](moments.md)。
+官网资源由`//go:embed assets/*`内嵌，只匹配顶层文件。新增JS/CSS需要四步：平铺放进`app/web/assets/`、在`app/web/web.go`的资源白名单与sha256版本列表登记、在`index.html`引入、重新编译Go二进制。帖子Markdown资源由`tools/`自包含npm工程生成：`npm --prefix tools ci`安装依赖，`sh tools/build_moment_markdown.sh`把渲染规则和扩展的`enhanceMarkdown`打包成`moment-markdown.js`，并从扩展复制`moment-markdown.css`；两份产物提交入库，`npm --prefix tools test`校验语法、XSS与产物完整性。`dev`分支通过`link:`解析扩展源码重建，`main`分支使用公共包与已提交产物。后台同样使用该渲染器，构建前先执行 `npm --prefix tools ci`。详见[论坛动态开发实例](moments.md)。
 
 官网的开发文档入口在同站`/docs/`，同时提供Dawn与PrismGo文档、搜索和亮暗主题；点击文档左上角品牌返回官网。构建命令在dawn-simple仓库执行：
 
