@@ -282,12 +282,15 @@
                 : user?.nickname || user?.unique_id || t("登录");
         $("logout").hidden = !user || user.type === "guest";
     }
+    let communityRegion = "";
     async function loadCommunityRegion() {
+        const location = $("moment-location").value;
         try {
             const result = await api("/api/moment-location");
             user = user ? { ...user, region: result.region } : user;
-            $("community-region").textContent = result.region === "未知" ? "" : result.region;
-            if (!editingId && !$("moment-location").value) $("moment-location").value = result.region;
+            communityRegion = result.region === "未知" ? "" : result.region;
+            $("community-region").textContent = communityRegion;
+            if (!editingId && (!location || location === "未知") && $("moment-location").value === location && communityRegion) $("moment-location").value = communityRegion;
             return result.region;
         } catch {}
     }
@@ -973,7 +976,7 @@
         loadingForm = true;
         $("moment-title").value = row.title || "";
         $("moment-board").value = row.board || "general";
-        $("moment-location").value = row.location || "";
+        $("moment-location").value = editingId ? row.location || "" : (row.location && row.location !== "未知" ? row.location : communityRegion);
         $("moment-anonymous").checked = !!row.is_anonymous;
         momentEditor.setValue(row.content || "");
         loadingForm = false;
