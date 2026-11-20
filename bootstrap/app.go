@@ -1,6 +1,7 @@
 package bootstrap
 
 import (
+	"github.com/dawnim/dawn-server/support/clientip"
 	"github.com/dawnim/dawn-simple/app/cmd"
 	"github.com/dawnim/dawn-simple/app/exceptions"
 	"github.com/dawnim/dawn-simple/app/schedule"
@@ -12,7 +13,9 @@ import (
 )
 
 func NewApplication(basePath ...string) *foundation.Application {
-	return foundation.Configure(basePath...).WithExtensionProviders(Extensions()...).WithProviders(Providers()...).WithRouting(func(r *foundation.Routing) {
+	return foundation.Configure(basePath...).WithExtensionProviders(Extensions()...).WithProviders(Providers()...).WithMiddleware(func(m *foundation.Middleware) {
+		m.Prepend(clientip.Register)
+	}).WithRouting(func(r *foundation.Routing) {
 		r.MigrationPaths("database/migrations")
 		r.SeedPaths("database/seeders")
 		r.Commands(cmd.CommandFactories()...)

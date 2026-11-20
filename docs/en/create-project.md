@@ -60,6 +60,7 @@ import (
     _ "example.com/my-admin/database/migrations"
     _ "example.com/my-admin/database/seeders"
     dawn "github.com/dawnim/dawn-server"
+    "github.com/dawnim/dawn-server/support/clientip"
     "github.com/prismgo/framework/encryption"
     "github.com/prismgo/framework/foundation"
 )
@@ -68,6 +69,9 @@ func NewApplication(basePath ...string) *foundation.Application {
     return foundation.Configure(basePath...).
         WithExtensionProviders(encryption.ServiceProvider{}, dawn.ServiceProvider{Configure: admin.Configure}).
         WithProviders(Providers()...).
+        WithMiddleware(func(m *foundation.Middleware) {
+            m.Prepend(clientip.Register)
+        }).
         WithRouting(func(r *foundation.Routing) {
             r.MigrationPaths("database/migrations")
             r.SeedPaths("database/seeders")

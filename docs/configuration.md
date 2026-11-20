@@ -51,8 +51,16 @@ rediss://default:password@cache.example.com:6379/0
 | `WS_ADDR`、`WS_PATH` | WS 监听，默认 `:8851` 与 `/` |
 | `ADMIN_PREFIX` | 后台 API 前缀，默认 `/admin` |
 | `ALLOWED_ORIGINS` | 默认 `*`；白名单用空格分隔完整来源 |
+| `SERVER_CLIENT_IP_MODE` | `trusted` 或 `simple`，默认 `trusted` |
+| `SERVER_CLIENT_IP_SIMPLE_HEADERS` | 简单模式请求头优先级，逗号分隔 |
+| `SERVER_CLIENT_IP_HEADERS` | 可信模式请求头优先级，逗号分隔 |
+| `SERVER_CLOUDFLARE_PROXIES`、`SERVER_CLOUDFRONT_PROXIES` | 启用官方 CDN 网段自动更新，默认 `false` |
 | `SERVER_TRUSTED_PROXIES` | 可信代理 IP 或网段，用逗号分隔 |
 | `SERVER_SHUTDOWN_TIMEOUT` | 在途请求关闭等待，默认 `15s` |
+
+简单模式依次查找请求头中的公网地址，再使用直连地址或私网地址兜底，请求头可以由客户端伪造。可信模式从直连地址开始，按配置顺序选择首个存在的转发头，从右向左查找第一个非可信地址，遇到无效地址时停止。`SERVER_TRUSTED_PROXIES` 需要包含应用与 CDN 之间的每一层代理，包括本机 Nginx 地址。启用 CDN 后，Go 进程启动时及每天下载官方网段，最近一次成功的结果保存在 `storage/app/clientip`。尚无有效网段时只信任显式配置的代理。应限制源站直接访问，并确保可信代理保留转发链。修改环境配置后重启服务生效。
+
+官网和后台域名的 Nginx 示例位于 `deploy/nginx`。`/ws` 使用独立监听，当前服务自身没有使用客户端 IP 的处理。
 
 HTTP 与 WS 使用相同的来源配置。任意来源模式使用 Bearer 认证；白名单模式允许指定来源携带凭证。同源 iframe 和下载使用登录 Cookie。接口始终执行身份与权限校验。
 

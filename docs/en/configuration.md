@@ -51,8 +51,16 @@ Alternatively, use `REDIS_HOST`, `REDIS_PORT`, `REDIS_USERNAME`, `REDIS_PASSWORD
 | `WS_ADDR`, `WS_PATH` | WS listener, `:8851` and `/` |
 | `ADMIN_PREFIX` | Admin API prefix, `/admin` |
 | `ALLOWED_ORIGINS` | `*`; separate explicit full origins with spaces |
+| `SERVER_CLIENT_IP_MODE` | `trusted` or `simple`, defaults to `trusted` |
+| `SERVER_CLIENT_IP_SIMPLE_HEADERS` | Comma-separated header priority for simple mode |
+| `SERVER_CLIENT_IP_HEADERS` | Comma-separated trusted proxy header priority |
+| `SERVER_CLOUDFLARE_PROXIES`, `SERVER_CLOUDFRONT_PROXIES` | Enable automatic official CDN range updates, default `false` |
 | `SERVER_TRUSTED_PROXIES` | Trusted proxy IPs or networks, comma-separated |
 | `SERVER_SHUTDOWN_TIMEOUT` | In-flight shutdown wait, `15s` |
+
+In simple mode the first public address from the configured headers is used, followed by the direct address and private-address fallback. Clients can forge these headers. Trusted mode starts at the direct peer and walks the first configured forwarding header from right to left until the first untrusted address. Invalid entries stop the walk. Configure every proxy between the application and CDN, including a local Nginx address, in `SERVER_TRUSTED_PROXIES`. CDN networks are downloaded by the Go process on startup and daily, with the last successful list cached under `storage/app/clientip`. Until a list is available, only explicitly configured proxies are trusted. Restrict direct origin access and ensure trusted proxies preserve the forwarding chain. Restart the service after changing environment settings.
+
+Nginx examples for the site and admin domains are available in `deploy/nginx`. The `/ws` service has a separate listener and does not currently use client IP for its own processing.
 
 HTTP and WS share allowed origins. Wildcard mode uses Bearer authentication; explicit allowlists permit credentials from those origins. Same-origin iframes and downloads use the login Cookie. APIs always check identity and permissions.
 
