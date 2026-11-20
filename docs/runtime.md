@@ -97,6 +97,10 @@ local 向前端传入 `DAWN_HTTP_TARGET`、`DAWN_WS_TARGET`、`DAWN_WS_PATH`、`
 
 ## 生产部署
 
+在构建机器的项目根目录运行 `./deploy.sh root@server /srv/dawn-simple`。脚本构建 Linux 程序、后台和文档，通过 SSH 上传产物。目标服务器需要 Bash、rsync、flock、Python 及 venv，以及可用的项目 `.env`。默认按 Linux amd64 构建，应用以 `www` 运行，可通过 `DEPLOY_ARCH` 和 `DEPLOY_USER` 调整。
+
+部署依次执行安装、完整数据库结构同步和服务更新。脚本安装并启动本地向量服务，模型就绪后同步 Dawn 与 PrismGo 的中文文档，再通过 `app:support-docs --index` 重建官网客服索引。
+
 在项目根目录构建：
 
 ```sh
@@ -114,6 +118,8 @@ go build -o bin/dawn-simple .
 部署保留与二进制同版的 `database/migrations`、`database/seeders` 源码，由一个实例执行安装。设置生产环境变量，配置数据库、Redis 与 `APP_KEY`；多个实例共享连接、应用密钥和文件存储。
 
 Go HTTP 服务负责 `/` 官网、`/docs/` 文档外壳、`/site-assets/`官网资源、`/favicon.ico`、`/chat/`访客客服和`/support-assets/`客服资源；这些路径必须代理到HTTP，不能由Nginx绕过，否则文档导航和客服注入不会生效。Nginx将`/admin/`、`/api/`转发至HTTP，将`/ws`转发至WS并启用Upgrade。默认WS服务路径为`/`，代理需将`/ws`改写为`/`。公开附件通过`public/storage`提供，私密附件通过授权接口读取。
+
+使用宝塔等会生成 CSS、JS 扩展名匹配规则的面板时，为 `/site-assets/`、`/support-assets/`、`/docs/`、`/storage/` 分别设置 `location ^~`，让请求进入 Go HTTP 服务。
 
 在站点的 `server` 中添加反向代理：
 

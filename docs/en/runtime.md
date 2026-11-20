@@ -97,6 +97,10 @@ Use `DAWN_FRONTEND_DIRECTORY` and `DAWN_FRONTEND_PORT` to change directory and p
 
 ## Production deployment
 
+Run `./deploy.sh root@server /srv/dawn-simple` from the project root on the build machine. The script builds the Linux binary, admin app, and documentation, then uploads them over SSH. The target server needs Bash, rsync, flock, Python with venv, and a configured project `.env`. The defaults are Linux amd64 and the `www` service account. Set `DEPLOY_ARCH` or `DEPLOY_USER` to override them.
+
+Deployment runs installation and full database schema sync before updating the services. The script installs and starts the local embedding service. Once the model is ready, `app:support-docs --index` publishes the Chinese Dawn and PrismGo docs and rebuilds the website support index.
+
 Build from the project root:
 
 ```sh
@@ -114,6 +118,8 @@ go build -o bin/dawn-simple .
 Keep `database/migrations` and `database/seeders` sources matching the binary. Run installation from one instance. Set production SQL, Redis, and `APP_KEY`; instances share connections, the application key, and file storage.
 
 Go HTTP serves `/` (website), `/docs/` (documentation shell), `/site-assets/`, `/favicon.ico`, `/chat/`, and `/support-assets/`. Proxy these paths to HTTP so documentation navigation and support injection work. Proxy `/admin/` and `/api/` to HTTP and `/ws` to WS with Upgrade enabled. The default WS service path is `/`; rewrite `/ws` accordingly. Serve public attachments through `public/storage`; private attachments use authorized APIs.
+
+If a hosting panel generates CSS and JS extension rules, give `/site-assets/`, `/support-assets/`, `/docs/`, and `/storage/` separate `location ^~` blocks that proxy to Go HTTP.
 
 Add reverse proxies inside the site's `server` block:
 

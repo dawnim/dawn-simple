@@ -12,7 +12,7 @@ import (
 type SupportDocsCommand struct{}
 
 func (*SupportDocsCommand) Definition() *console.Definition {
-	return console.MustDefinition("app:support-docs", i18n.Text("", "同步官网客服文档"))
+	return console.MustDefinition("app:support-docs {--index : 同步后重建向量索引}", i18n.Text("", "同步官网客服文档"))
 }
 
 func (*SupportDocsCommand) Handle(command console.CommandContext) error {
@@ -21,5 +21,14 @@ func (*SupportDocsCommand) Handle(command console.CommandContext) error {
 	if err := manager.DB.WithContext(command.Context()).Where("public_key = ?", "dawn").First(&app).Error; err != nil {
 		return err
 	}
-	return seeders.SyncSupportDocs(command.Context(), manager.DB, app.ID)
+	if err := seeders.SyncSupportDocs(command.Context(), manager.DB, app.ID); err != nil {
+		return err
+	}
+	if command.Input().OptionBool("index") {
+		if err := manager.BuildIndex(command.Context(), app.ID); err != nil {
+			return err
+		}
+		command.IO().Info("官网客服文档向量索引已更新")
+	}
+	return nil
 }
