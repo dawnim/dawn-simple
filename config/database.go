@@ -2,6 +2,49 @@ package config
 
 func init() {
 	Add("database", func() map[string]interface{} {
+		redisConnection := func(name string, database int) map[string]interface{} {
+			url := Env("REDIS_"+name+"_URL", "")
+			host := Env("REDIS_HOST", "")
+			port := Env("REDIS_PORT", "")
+			username := Env("REDIS_USERNAME", "")
+			password := Env("REDIS_PASSWORD", "")
+			if url == "" {
+				url = Env("REDIS_URL", "")
+			} else {
+				host, port, username, password = "", "", "", ""
+			}
+			db := Env("REDIS_"+name+"_DB", "")
+			if db == "" {
+				db = database
+			}
+			return map[string]interface{}{
+				"url":           url,
+				"scheme":        Env("REDIS_SCHEME", ""),
+				"host":          host,
+				"port":          port,
+				"username":      username,
+				"password":      password,
+				"database":      db,
+				"timeout":       Env("REDIS_TIMEOUT", ""),
+				"read_timeout":  Env("REDIS_READ_TIMEOUT", ""),
+				"write_timeout": Env("REDIS_WRITE_TIMEOUT", ""),
+				"max_retries":   Env("REDIS_MAX_RETRIES", ""),
+			}
+		}
+		cacheURL := Env("REDIS_CACHE_URL", "")
+		cacheDB := Env("REDIS_CACHE_DB", "")
+		cacheHost := Env("REDIS_HOST", "")
+		cachePort := Env("REDIS_PORT", "")
+		cacheUsername := Env("REDIS_USERNAME", "")
+		cachePassword := Env("REDIS_PASSWORD", "")
+		if cacheURL == "" {
+			cacheURL = Env("REDIS_URL", "")
+			if cacheDB == "" {
+				cacheDB = 2
+			}
+		} else {
+			cacheHost, cachePort, cacheUsername, cachePassword = "", "", "", ""
+		}
 		connections := map[string]interface{}{
 			// SQLite 文件连接：storage/database.sqlite?_pragma=foreign_keys(1)&_pragma=busy_timeout(5000)
 			"sqlite": map[string]interface{}{
@@ -93,19 +136,22 @@ func init() {
 					"max_retries":   Env("REDIS_MAX_RETRIES", ""),
 				},
 				"cache": map[string]interface{}{
-					"url":           Env("REDIS_CACHE_URL", ""),
+					"url":           cacheURL,
 					"scheme":        Env("REDIS_CACHE_SCHEME", ""),
-					"host":          Env("REDIS_HOST", ""),
-					"port":          Env("REDIS_PORT", ""),
-					"username":      Env("REDIS_USERNAME", ""),
-					"password":      Env("REDIS_PASSWORD", ""),
-					"database":      Env("REDIS_CACHE_DB", ""),
+					"host":          cacheHost,
+					"port":          cachePort,
+					"username":      cacheUsername,
+					"password":      cachePassword,
+					"database":      cacheDB,
 					"name":          Env("REDIS_CACHE_NAME", ""),
 					"timeout":       Env("REDIS_CACHE_TIMEOUT", ""),
 					"read_timeout":  Env("REDIS_CACHE_READ_TIMEOUT", ""),
 					"write_timeout": Env("REDIS_CACHE_WRITE_TIMEOUT", ""),
 					"max_retries":   Env("REDIS_CACHE_MAX_RETRIES", ""),
 				},
+				"session": redisConnection("SESSION", 4),
+				"queue":   redisConnection("QUEUE", 3),
+				"horizon": redisConnection("HORIZON", 3),
 			},
 		}
 	})

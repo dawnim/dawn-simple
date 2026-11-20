@@ -16,7 +16,7 @@ Register settings with `config.Add` and `config.Env`, and blank-import the confi
 | `config/filesystem.go` | Local and cloud disks |
 | `config/logging.go`, `encoding.go` | Logs and encoding |
 
-Cache, queues, Session, and Horizon reference named `database` connections. The application name and environment form the cache namespace; keep them consistent across instances.
+Cache, Session, the queue, and Horizon use separate Redis connections. The application name namespaces Redis keys; `APP_ENV` is not part of the prefix.
 
 ## SQL and Redis
 
@@ -39,9 +39,9 @@ redis://username:password@127.0.0.1:6379/0
 rediss://default:password@cache.example.com:6379/0
 ```
 
-Set `REDIS_URL`. For a separate cache connection, set `REDIS_CACHE_URL` and `CACHE_REDIS_CONNECTION=cache`. Encode special characters in URLs, such as `%40` for `@`. `rediss://` enables TLS and certificate verification; use the provider's DNS endpoint.
+Set `REDIS_URL` or shared host and authentication fields. The default connection is for application state. The `cache`, `session`, `queue`, and `horizon` connections use separate Redis logical databases selected by `REDIS_CACHE_DB`, `REDIS_SESSION_DB`, `REDIS_QUEUE_DB`, and `REDIS_HORIZON_DB`. Failed-job and batch records use the queue connection. Set a component-specific URL only when it needs a different Redis service. Encode special characters in URLs, such as `%40` for `@`. `rediss://` enables TLS and certificate verification; use the provider's DNS endpoint.
 
-Alternatively, use `REDIS_HOST`, `REDIS_PORT`, `REDIS_USERNAME`, `REDIS_PASSWORD`, and `REDIS_MAIN_DB`. Nonempty individual settings override the corresponding URL fields. The current client supports single-node or Cluster Mode Disabled instances.
+Alternatively, use `REDIS_HOST`, `REDIS_PORT`, `REDIS_USERNAME`, and `REDIS_PASSWORD`. Nonempty individual settings override the corresponding URL fields. The current client supports single-node or Cluster Mode Disabled instances.
 
 ## CORS and proxies
 
@@ -57,6 +57,7 @@ Alternatively, use `REDIS_HOST`, `REDIS_PORT`, `REDIS_USERNAME`, `REDIS_PASSWORD
 | `SERVER_CLOUDFLARE_PROXIES`, `SERVER_CLOUDFRONT_PROXIES` | Enable automatic official CDN range updates, default `false` |
 | `SERVER_TRUSTED_PROXIES` | Trusted proxy IPs or networks, comma-separated |
 | `SERVER_SHUTDOWN_TIMEOUT` | In-flight shutdown wait, `15s` |
+
 
 In simple mode the first public address from the configured headers is used, followed by the direct address and private-address fallback. Clients can forge these headers. Trusted mode starts at the direct peer and walks the first configured forwarding header from right to left until the first untrusted address. Invalid entries stop the walk. Configure every proxy between the application and CDN, including a local Nginx address, in `SERVER_TRUSTED_PROXIES`. CDN networks are downloaded by the Go process on startup and daily, with the last successful list cached under `storage/app/clientip`. Until a list is available, only explicitly configured proxies are trusted. Restrict direct origin access and ensure trusted proxies preserve the forwarding chain. Restart the service after changing environment settings.
 

@@ -8,7 +8,7 @@ import (
 
 func init() {
 	Add("queue", func() map[string]interface{} {
-		prefix := fmt.Sprintf("%v:%v", Env("APP_NAME", "dawn-simple"), Env("APP_ENV", "local"))
+		prefix := fmt.Sprint(Env("APP_NAME", "dawn-simple"))
 		return map[string]interface{}{
 			/*
 				|--------------------------------------------------------------------------
@@ -43,13 +43,13 @@ func init() {
 			*/
 			"failed": map[string]interface{}{
 				"driver": Env("QUEUE_FAILED_DRIVER", "redis"),
-				"store":  Env("QUEUE_FAILED_STORE", "default"),
+				"store":  Env("QUEUE_FAILED_STORE", "queue"),
 				"prefix": Env("QUEUE_FAILED_PREFIX", prefix+":failed"),
 				"ttl":    Env("QUEUE_FAILED_TTL", 0),
 			},
 			"batching": map[string]interface{}{
 				"driver": Env("QUEUE_BATCHING_DRIVER", "redis"),
-				"store":  Env("QUEUE_BATCHING_STORE", "default"),
+				"store":  Env("QUEUE_BATCHING_STORE", "queue"),
 				"prefix": Env("QUEUE_BATCHING_PREFIX", prefix+":batches"),
 				"ttl":    Env("QUEUE_BATCHING_TTL", 0),
 			},
@@ -81,7 +81,7 @@ func init() {
 					"driver":      "redis",
 					"queue":       Env("REDIS_QUEUE", constants.QueueDefault),
 					"prefix":      Env("REDIS_QUEUE_PREFIX", prefix+":queue"),
-					"connection":  Env("REDIS_QUEUE_CONNECTION", "default"),
+					"connection":  Env("REDIS_QUEUE_CONNECTION", "queue"),
 					"retry_after": Env("REDIS_QUEUE_RETRY_AFTER", 21660),
 					"block_for":   Env("REDIS_QUEUE_BLOCK_FOR", 0),
 				},

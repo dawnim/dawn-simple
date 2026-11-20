@@ -8,7 +8,7 @@ import (
 
 func init() {
 	Add("horizon", func() map[string]any {
-		prefix := fmt.Sprintf("%v:%v", Env("APP_NAME", "dawn-simple"), Env("APP_ENV", "local"))
+		prefix := fmt.Sprint(Env("APP_NAME", "dawn-simple"))
 		supervisors := map[string]any{
 			// 串行任务：一个worker按队列优先级处理；同一部署只运行一份。
 			"supervisor": map[string]any{
@@ -29,7 +29,7 @@ func init() {
 		return map[string]any{
 			"path":                  Env("HORIZON_PATH", fmt.Sprintf("%v/horizon", Env("ADMIN_PREFIX", "/admin"))),
 			"heartbeat_ttl_seconds": Env("HORIZON_HEARTBEAT_TTL", 60),
-			"use":                   "redis", "prefix": Env("HORIZON_PREFIX", prefix+":horizon:"),
+			"use":                   "redis", "connection": Env("HORIZON_CONNECTION", "horizon"), "prefix": Env("HORIZON_PREFIX", prefix+":horizon:"),
 			"environments": map[string]any{"*": supervisors},
 		}
 	})

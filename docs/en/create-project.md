@@ -127,6 +127,18 @@ func init() {
 package config
 
 func init() {
+    redisConnection := func(name string, database int) map[string]any {
+        url := Env("REDIS_"+name+"_URL", "")
+        if url == "" {
+            url = Env("REDIS_URL", "")
+        }
+        return map[string]any{
+            "url": url,
+            "host": Env("REDIS_HOST", ""), "port": Env("REDIS_PORT", ""),
+            "username": Env("REDIS_USERNAME", ""), "password": Env("REDIS_PASSWORD", ""),
+            "database": Env("REDIS_"+name+"_DB", database),
+        }
+    }
     Add("database", func() map[string]any {
         return map[string]any{
             "default": Env("DB_CONNECTION", "mariadb"),
@@ -146,7 +158,12 @@ func init() {
                 "client": "go",
                 "default": map[string]any{
                     "url": Env("REDIS_URL", "redis://127.0.0.1:6379/0"),
+                    "database": Env("REDIS_MAIN_DB", 0),
                 },
+                "cache": redisConnection("CACHE", 2),
+                "session": redisConnection("SESSION", 4),
+                "queue": redisConnection("QUEUE", 3),
+                "horizon": redisConnection("HORIZON", 3),
             },
         }
     })
@@ -166,7 +183,7 @@ import (
 
 func init() {
 	Add("horizon", func() map[string]any {
-		prefix := fmt.Sprintf("%v:%v", Env("APP_NAME", "my-admin"), Env("APP_ENV", "local"))
+        prefix := fmt.Sprint(Env("APP_NAME", "my-admin"))
 		supervisors := map[string]any{
 			// Serial tasks use one worker and run once per deployment.
 			"supervisor": map[string]any{
@@ -187,7 +204,7 @@ func init() {
 		return map[string]any{
 			"path":                  Env("HORIZON_PATH", fmt.Sprintf("%v/horizon", Env("ADMIN_PREFIX", "/admin"))),
 			"heartbeat_ttl_seconds": Env("HORIZON_HEARTBEAT_TTL", 60),
-			"use":                   "redis", "prefix": Env("HORIZON_PREFIX", prefix+":horizon:"),
+            "use":                   "redis", "connection": Env("HORIZON_CONNECTION", "horizon"), "prefix": Env("HORIZON_PREFIX", prefix+":horizon:"),
 			"environments": map[string]any{"*": supervisors},
 		}
 	})
@@ -352,21 +369,34 @@ DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_USERNAME=your_user
 DB_PASSWORD=your_password
-REDIS_URL=redis://127.0.0.1:6379/0
+REDIS_HOST=127.0.0.1
+REDIS_PORT=6379
+REDIS_PASSWORD=
+REDIS_MAIN_DB=0
+REDIS_CACHE_DB=2
+REDIS_SESSION_DB=4
+REDIS_QUEUE_DB=3
+REDIS_HORIZON_DB=3
 CACHE_STORE=redis
-CACHE_PREFIX=my-admin:local
+CACHE_PREFIX="${APP_NAME}"
 SESSION_DRIVER=redis
-SESSION_PREFIX=my-admin:local:session
+SESSION_CONNECTION=session
+SESSION_PREFIX="${APP_NAME}:session"
 QUEUE_CONNECTION=redis
 QUEUE_FAILED_DRIVER=redis
-QUEUE_FAILED_PREFIX=my-admin:local:failed
+QUEUE_FAILED_STORE=queue
+QUEUE_FAILED_PREFIX="${APP_NAME}:failed"
 QUEUE_BATCHING_DRIVER=redis
-QUEUE_BATCHING_PREFIX=my-admin:local:batches
-QUEUE_RESTART_KEY=my-admin:local:queue:restart
-REDIS_QUEUE_PREFIX=my-admin:local:queue
+QUEUE_BATCHING_STORE=queue
+QUEUE_BATCHING_PREFIX="${APP_NAME}:batches"
+QUEUE_RESTART_KEY="${APP_NAME}:queue:restart"
+REDIS_QUEUE_CONNECTION=queue
+REDIS_QUEUE_PREFIX="${APP_NAME}:queue"
+HORIZON_CONNECTION=horizon
+HORIZON_PREFIX="${APP_NAME}:horizon:"
 ```
 
-Connection names must match cache and queue configuration. Give each application its own database and namespace. Update the prefixes when changing `APP_ENV` between environments.
+Application state, cache, sessions, the queue, and Horizon use separate Redis databases. Give each application a unique `APP_NAME`. Dotenv expands `${APP_NAME}` in double-quoted values; `APP_ENV` identifies the runtime environment only.
 
 ```sh
 go mod tidy

@@ -14,6 +14,7 @@ func TestHorizonGroups(t *testing.T) {
 		t.Run(serial, func(t *testing.T) {
 			t.Setenv("HORIZON_SERIAL", serial)
 			t.Setenv("HORIZON_CONCURRENCY", "6")
+			t.Setenv("HORIZON_CONNECTION", "horizon")
 			configuration, err := cfg.NewFromFile(filepath.Join(t.TempDir(), ".env"))
 			if err != nil {
 				t.Fatal(err)
@@ -21,6 +22,9 @@ func TestHorizonGroups(t *testing.T) {
 			h, err := horizon.LoadConfigFrom(configuration)
 			if err != nil {
 				t.Fatal(err)
+			}
+			if h.Connection != "horizon" {
+				t.Fatalf("Horizon Redis connection = %q", h.Connection)
 			}
 			sequential, enabled := h.Supervisors["supervisor"]
 			if enabled != (serial == "true") {

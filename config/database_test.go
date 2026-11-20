@@ -29,11 +29,12 @@ func TestRedisConfiguration(t *testing.T) {
 		{name: "url", url: "redis://cache.example.com:6380/5", address: "cache.example.com:6380", db: 5},
 		{name: "password", url: "redis://:p%40ssword@cache.example.com:6380/5", address: "cache.example.com:6380", password: "p@ssword", db: 5},
 		{name: "tls", url: "rediss://default:p%40ssword@cache.example.com:6380/5", cacheURL: "rediss://cache.example.com:6381/2", address: "cache.example.com:6380", user: "default", password: "p@ssword", db: 5, tls: true},
+		{name: "independent-cache", cacheURL: "redis://cache.example.com:6381/2", address: "127.0.0.1:6380", user: "admin", password: "secret", fields: map[string]string{"REDIS_HOST": "127.0.0.1", "REDIS_PORT": "6380", "REDIS_USERNAME": "admin", "REDIS_PASSWORD": "secret"}},
 		{name: "fields", address: "cache.example.com:6380", user: "admin", password: "p@ssword", db: 5,
 			fields: map[string]string{"REDIS_HOST": "cache.example.com", "REDIS_PORT": "6380", "REDIS_USERNAME": "admin", "REDIS_PASSWORD": "p@ssword", "REDIS_MAIN_DB": "5", "REDIS_TIMEOUT": "3s"}},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			for _, key := range []string{"REDIS_HOST", "REDIS_PORT", "REDIS_USERNAME", "REDIS_PASSWORD", "REDIS_MAIN_DB", "REDIS_SCHEME", "REDIS_CACHE_SCHEME", "REDIS_CACHE_DB"} {
+			for _, key := range []string{"REDIS_HOST", "REDIS_PORT", "REDIS_USERNAME", "REDIS_PASSWORD", "REDIS_MAIN_DB", "REDIS_SCHEME", "REDIS_CACHE_SCHEME", "REDIS_CACHE_DB", "REDIS_SESSION_DB", "REDIS_QUEUE_DB", "REDIS_HORIZON_DB", "REDIS_SESSION_URL", "REDIS_QUEUE_URL", "REDIS_HORIZON_URL"} {
 				t.Setenv(key, "")
 			}
 			t.Setenv("REDIS_URL", test.url)
@@ -75,6 +76,89 @@ func TestRedisConfiguration(t *testing.T) {
 				t.Fatal("连接超时未生效")
 			}
 		})
+	}
+}
+
+func TestRedisSubsystemConnections(t *testing.T) {
+	for key, value := range map[string]string{
+		"REDIS_URL":              "redis://127.0.0.1:6379/0",
+		"REDIS_HOST":             "127.0.0.1",
+		"REDIS_PORT":             "6379",
+		"REDIS_PASSWORD":         "test-only",
+		"REDIS_CACHE_DB":         "2",
+		"REDIS_SESSION_DB":       "4",
+		"REDIS_QUEUE_DB":         "3",
+		"REDIS_HORIZON_DB":       "3",
+		"CACHE_REDIS_CONNECTION": "cache",
+	} {
+		t.Setenv(key, value)
+	}
+	configuration, err := cfg.NewFromFile(filepath.Join(t.TempDir(), ".env"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	manager, err := redis.NewManager(redis.ConfigFromRepository(configuration))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer manager.Close(context.Background())
+	for name, want := range map[string]int{"default": 0, "cache": 2, "session": 4, "queue": 3, "horizon": 3} {
+		connection, err := manager.Connection(name)
+		if err != nil {
+			t.Fatal(err)
+		}
+		options := connection.Client().(*goredis.Client).Options()
+		if options.DB != want || options.Password != "test-only" {
+			t.Fatalf("%s Redis DB=%d password=%t", name, options.DB, options.Password != "")
+		}
+	}
+	for key, want := range map[string]string{
+		"cache.stores.redis.connection":      "cache",
+		"session.connection":                 "session",
+		"queue.connections.redis.connection": "queue",
+		"queue.failed.store":                 "queue",
+		"queue.batching.store":               "queue",
+		"horizon.connection":                 "horizon",
+	} {
+		if got := configuration.GetString(key); got != want {
+			t.Fatalf("%s = %q, want %q", key, got, want)
+		}
+	}
+}
+
+func TestPrefixesExpandApplicationName(t *testing.T) {
+	t.Setenv("APP_NAME", "dawn-test")
+	t.Setenv("APP_ENV", "production")
+	path := filepath.Join(t.TempDir(), ".env")
+	data := []byte(`APP_NAME=dawn-test
+APP_ENV=production
+CACHE_PREFIX="${APP_NAME}"
+SESSION_PREFIX="${APP_NAME}:session"
+QUEUE_FAILED_PREFIX="${APP_NAME}:failed"
+QUEUE_BATCHING_PREFIX="${APP_NAME}:batches"
+QUEUE_RESTART_KEY="${APP_NAME}:queue:restart"
+REDIS_QUEUE_PREFIX="${APP_NAME}:queue"
+HORIZON_PREFIX="${APP_NAME}:horizon:"
+`)
+	if err := os.WriteFile(path, data, 0600); err != nil {
+		t.Fatal(err)
+	}
+	configuration, err := cfg.NewFromFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for key, want := range map[string]string{
+		"cache.prefix":                   "dawn-test",
+		"session.prefix":                 "dawn-test:session",
+		"queue.failed.prefix":            "dawn-test:failed",
+		"queue.batching.prefix":          "dawn-test:batches",
+		"queue.restart.key":              "dawn-test:queue:restart",
+		"queue.connections.redis.prefix": "dawn-test:queue",
+		"horizon.prefix":                 "dawn-test:horizon:",
+	} {
+		if got := configuration.GetString(key); got != want {
+			t.Fatalf("%s = %q, want %q", key, got, want)
+		}
 	}
 }
 

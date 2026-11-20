@@ -26,7 +26,7 @@ func init() {
 				|
 			*/
 			"encoding": Env("CACHE_ENCODING", ""),
-			"prefix":   Env("CACHE_PREFIX", fmt.Sprintf("%v:%v", Env("APP_NAME", "dawn-simple"), Env("APP_ENV", "local"))),
+			"prefix":   Env("CACHE_PREFIX", fmt.Sprintf("%v", Env("APP_NAME", "dawn-simple"))),
 
 			/*
 				|--------------------------------------------------------------------------
@@ -61,7 +61,7 @@ func init() {
 				"redis": map[string]interface{}{
 					"driver":     "redis",
 					"prefix":     Env("CACHE_REDIS_PREFIX", ""),
-					"connection": Env("CACHE_REDIS_CONNECTION", "default"),
+					"connection": Env("CACHE_REDIS_CONNECTION", "cache"),
 					"events":     Env("CACHE_REDIS_EVENTS", true),
 				},
 				"file": map[string]interface{}{

@@ -4,7 +4,7 @@ import "fmt"
 
 func init() {
 	Add("session", func() map[string]interface{} {
-		prefix := fmt.Sprintf("%v:%v", Env("APP_NAME", "dawn-simple"), Env("APP_ENV", "local"))
+		prefix := fmt.Sprint(Env("APP_NAME", "dawn-simple"))
 		return map[string]interface{}{
 			/*
 				|--------------------------------------------------------------------------
@@ -30,7 +30,7 @@ func init() {
 			"expire_on_close": Env("SESSION_EXPIRE_ON_CLOSE", false),
 			"encrypt":         Env("SESSION_ENCRYPT", false),
 			"encoding":        Env("SESSION_ENCODING", ""),
-			"connection":      Env("SESSION_CONNECTION", "default"),
+			"connection":      Env("SESSION_CONNECTION", "session"),
 			"prefix":          Env("SESSION_PREFIX", prefix+":session"),
 
 			/*

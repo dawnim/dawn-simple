@@ -16,7 +16,7 @@
 | `config/filesystem.go` | 本地与云端磁盘 |
 | `config/logging.go`、`encoding.go` | 日志与编码 |
 
-缓存、队列、Session 与 Horizon 通过连接名引用 `database` 中的连接。应用名称与环境组成缓存命名空间，同一应用的实例保持一致。
+缓存、Session、队列与 Horizon 使用独立 Redis 连接。应用名称作为 Redis key 命名空间，`APP_ENV` 不参与前缀。
 
 ## 数据库与 Redis
 
@@ -39,9 +39,9 @@ redis://username:password@127.0.0.1:6379/0
 rediss://default:password@cache.example.com:6379/0
 ```
 
-设置 `REDIS_URL`；需要独立缓存连接时，配置 `REDIS_CACHE_URL` 和 `CACHE_REDIS_CONNECTION=cache`。URL 中的特殊字符需编码，如 `@` 写为 `%40`。`rediss://` 启用 TLS 并校验证书，使用服务提供的 DNS 端点。
+设置 `REDIS_URL` 或共用的主机和认证字段。默认连接用于应用状态；`cache`、`session`、`queue`、`horizon` 使用独立 Redis DB，分别由 `REDIS_CACHE_DB`、`REDIS_SESSION_DB`、`REDIS_QUEUE_DB`、`REDIS_HORIZON_DB` 指定。失败任务与批次记录使用队列连接。只有组件需要不同 Redis 服务时才单独设置该组件的 URL。URL 中的特殊字符需编码，如 `@` 写为 `%40`。`rediss://` 启用 TLS 并校验证书，使用服务提供的 DNS 端点。
 
-也可使用 `REDIS_HOST`、`REDIS_PORT`、`REDIS_USERNAME`、`REDIS_PASSWORD`、`REDIS_MAIN_DB`；非空分项覆盖 URL 中的对应值。当前客户端配置面向单节点或关闭 Cluster Mode 的实例。
+也可使用 `REDIS_HOST`、`REDIS_PORT`、`REDIS_USERNAME`、`REDIS_PASSWORD`；非空分项覆盖 URL 中的对应值。当前客户端配置面向单节点或关闭 Cluster Mode 的实例。
 
 ## 跨域与代理
 
@@ -57,6 +57,7 @@ rediss://default:password@cache.example.com:6379/0
 | `SERVER_CLOUDFLARE_PROXIES`、`SERVER_CLOUDFRONT_PROXIES` | 启用官方 CDN 网段自动更新，默认 `false` |
 | `SERVER_TRUSTED_PROXIES` | 可信代理 IP 或网段，用逗号分隔 |
 | `SERVER_SHUTDOWN_TIMEOUT` | 在途请求关闭等待，默认 `15s` |
+
 
 简单模式依次查找请求头中的公网地址，再使用直连地址或私网地址兜底，请求头可以由客户端伪造。可信模式从直连地址开始，按配置顺序选择首个存在的转发头，从右向左查找第一个非可信地址，遇到无效地址时停止。`SERVER_TRUSTED_PROXIES` 需要包含应用与 CDN 之间的每一层代理，包括本机 Nginx 地址。启用 CDN 后，Go 进程启动时及每天下载官方网段，最近一次成功的结果保存在 `storage/app/clientip`。尚无有效网段时只信任显式配置的代理。应限制源站直接访问，并确保可信代理保留转发链。修改环境配置后重启服务生效。
 
