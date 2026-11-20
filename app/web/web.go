@@ -103,7 +103,6 @@ func Register(a *admin.App) {
 	route.Get("/moments", page)
 	route.Get("/moments/{id}", page)
 	route.Get("/site-assets/{name}", func(c *gin.Context) {
-		c.Header("Cache-Control", "no-cache")
 		name := c.Param("name")
 		kind := "text/javascript; charset=utf-8"
 		switch name {
@@ -122,6 +121,11 @@ func Register(a *admin.App) {
 		if err != nil {
 			c.Status(404)
 			return
+		}
+		if c.Query("v") == fmt.Sprintf("%x", sha256.Sum256(data)) {
+			c.Header("Cache-Control", "public, max-age=31536000, immutable")
+		} else {
+			c.Header("Cache-Control", "no-cache")
 		}
 		c.Data(200, kind, data)
 	})

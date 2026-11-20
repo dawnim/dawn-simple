@@ -6,14 +6,30 @@
         <meta name="referrer" content="strict-origin-when-cross-origin" />
         <title>Dawn</title>
         <link rel="icon" type="image/svg+xml" href="/site-assets/logo.svg" />
+        <script>
+            const initialTheme = localStorage.getItem("dawn.site.theme") || "system";
+            document.documentElement.dataset.theme = initialTheme === "system" ? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : initialTheme;
+            window.momentMarkdownReady = new Promise((resolve, reject) => {
+                const script = document.createElement("script");
+                script.src = "/site-assets/moment-markdown.js";
+                script.onload = resolve;
+                script.onerror = () => reject(new Error("编辑器加载失败"));
+                document.head.append(script);
+            });
+        </script>
+        <style>
+            html { background: #f6f7f9; color: #20242c; }
+            html[data-theme="dark"] { background: #14171c; color: #e7e9ed; }
+            #site-startup { position: fixed; inset: 0; z-index: 9999; display: grid; place-items: center; background: inherit; font: 600 18px system-ui; }
+        </style>
         <link rel="stylesheet" href="/site-assets/site.css" />
         <link rel="stylesheet" href="/site-assets/moment-markdown.css" />
         <script src="/support-assets/widget.js" defer></script>
         <script src="/site-assets/spark-md5.min.js" defer></script>
-        <script src="/site-assets/moment-markdown.js" defer></script>
         <script src="/site-assets/site.js" defer></script>
     </head>
     <body>
+        <div id="site-startup" role="status">Dawn</div>
         <iframe id="documentation" title="Dawn 文档" hidden></iframe>
         <button id="moment-ai" class="moment-ai" type="button" data-t="AI写动态" hidden></button>
         <aside id="community-chat" class="community-chat" hidden aria-label="聊天">

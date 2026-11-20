@@ -2,6 +2,7 @@
     "use strict";
     const $ = (id) => document.getElementById(id);
     let momentEditor;
+    const markdownReady = window.momentMarkdownReady || Promise.resolve();
     const element = (tag, className, value) => {
         const node = document.createElement(tag);
         if (className) node.className = className;
@@ -292,6 +293,7 @@
     }
     async function resolveIdentity({ visitor_ticket }) {
         token = localStorage.getItem("dawn.member") || "";
+        const previousToken = token;
         const version = accountVersion;
         let result;
         try {
@@ -314,7 +316,10 @@
         user = result.user;
         profile();
         void loadCommunityRegion();
-        if (!$('moments').hidden) void loadMoments();
+        if (!$('moments').hidden) {
+            renderForumNav();
+            if (previousToken && token !== previousToken) void loadMoments();
+        }
         return result.support;
     }
     $("account").onclick = () => {
@@ -505,12 +510,14 @@
         const id = location.pathname.match(/^\/moments\/(\d+)/)?.[1];
         const list = $("moment-list"), pages = $("moment-pages");
         renderForumNav(); $("forum-tabs").hidden = !!id;
-        list.replaceChildren(element("p", "moment-empty", t("加载中"))); pages.replaceChildren();
+        if (!list.children.length) list.replaceChildren(element("p", "moment-empty", t("加载中")));
         $("moment-error").textContent = "";
         void loadOverview().catch(() => {});
         try {
             const result = id ? { data: [await api(`/api/moments/${id}`)] } : await api(`/api/moments?${params}`, "GET", undefined, true);
+            if (id) await markdownReady;
             if (version !== momentVersion) return;
+            pages.replaceChildren();
             if (result.meta && result.meta.page > 1 && !result.data.length) {
                 params.set("page", Math.max(1, Math.ceil(result.meta.total / result.meta.page_size)));
                 navigate(`/?${params}`, "replace"); return;
@@ -534,7 +541,11 @@
                     const boardLink = element("a", `board-tag board-${row.board || "general"}`, t(board[0])); boardLink.href = `/?board=${row.board || "general"}`;
                     meta.append(boardLink, element("span", "", row.is_anonymous ? t("匿名用户") : row.nickname || row.unique_id), element("span", "", t(row.region || "未知")), element("time", "", new Date(row.activity_at || row.created_at).toLocaleDateString(language === "zh" ? "zh-CN" : "en-US")));
                     if (row.user_type === "ai") meta.append(element("span", "moment-badge", "AI"));
-                    body.append(link, element("p", "moment-excerpt", markdownToText(row.content).slice(0, 140)), meta);
+                    const excerpt = element("p", "moment-excerpt", markdownToText(row.content).slice(0, 140));
+                    if (!window.DawnMomentMarkdown) void markdownReady.then(() => {
+                        if (excerpt.isConnected) excerpt.textContent = markdownToText(row.content).slice(0, 140);
+                    }).catch(() => {});
+                    body.append(link, excerpt, meta);
                     card.append(photo, body);
                     if (images.length) { const image = element("img", "row-thumbnail"); image.src = momentImageURL(row.id, images[0]); image.alt = ""; image.loading = "lazy"; image.onclick = () => openImageViewer(image.src); card.append(image); }
                     const actions = element("div", "row-actions");
@@ -663,7 +674,7 @@
         const button = $("moment-ai"); button.disabled = true; button.textContent = t("正在生成");
         try {
             const result = await api("/api/moment-drafts", "POST", { path: location.pathname });
-            openNewMoment(); momentEditor.setValue(result.content); $("moment-title").value = result.content.split("\n")[0].slice(0, 60); $("moment-board").value = "ai"; saveMomentDraft();
+            await openNewMoment(); momentEditor.setValue(result.content); $("moment-title").value = result.content.split("\n")[0].slice(0, 60); $("moment-board").value = "ai"; saveMomentDraft();
         } catch (error) { alert(error.message); }
         finally { button.disabled = false; button.textContent = t("AI写动态"); }
     };
@@ -798,7 +809,14 @@
         $("community-chat").hidden = true; $("nav-chat-unread").hidden = true;
         if (user) void connectCommunity(chatVersion);
     }
-    $("moment-compose").onclick = () => { if (memberRequired()) openNewMoment(); };
+    $("moment-compose").onclick = async () => {
+        if (!memberRequired()) return;
+        const button = $("moment-compose");
+        button.disabled = true;
+        try { await openNewMoment(); }
+        catch (error) { $("moment-error").textContent = error.message; }
+        finally { button.disabled = false; }
+    };
     let momentFormat = "moment", editingId = 0, currentImages = [], openingMoment = 0;
     let loadingForm = false, galleryVersion = 0, galleryUploading = false, gallerySearchVersion = 0;
     let editingImageNames = {};
@@ -970,7 +988,8 @@
         renderGallery();
         $("moment-dialog").showModal();
     }
-    function openNewMoment() {
+    async function openNewMoment() {
+        await editorReady;
         ++openingMoment;
         ++galleryVersion;
         editingId = 0; editingImageNames = {}; currentImages = [];
@@ -981,6 +1000,7 @@
     }
     async function openMomentEditor(row) {
         const version = ++openingMoment;
+        await editorReady;
         row = await api(`/api/moments/${row.id}`);
         if (version !== openingMoment) return;
         ++galleryVersion;
@@ -999,24 +1019,28 @@
             if (!editingId) loadComposeFields(momentDrafts[format] || {});
         };
     }
-    momentEditor = window.DawnMomentEditor.create($("moment-editor-shell"), {
-        render: text => renderEditorMarkdown(text, editingId, editingImageNames),
-        enhance: enhanceEditorMarkdown,
-        imageLibrary: momentImageLibrary,
-        imageUploader: momentImageUploader,
-        mediaMarkup: (url, type) => `MEDIA::${type}::${url}`,
-        mentions: async (query) => {
-            const rows = await api(`/api/mentions/search?q=${encodeURIComponent(query)}`);
-            return (rows || []).map((row) => ({ label: `${row.nickname || row.unique_id} · ${row.unique_id}`, value: row.unique_id }));
-        },
-        config: editorConfig,
-        previewImage: openImageViewer,
-        onChange: saveMomentDraft,
-        onSaveDraft: () => { saveMomentDraft(); if (!editingId) $("moment-form-error").textContent = t("草稿已保存"); },
-        locale: language === "en" ? "en" : "zh",
-        placeholder: t("分享你的想法"),
-        maxLength: 1024
+    const editorReady = markdownReady.then(() => {
+        momentEditor = window.DawnMomentEditor.create($("moment-editor-shell"), {
+            render: text => renderEditorMarkdown(text, editingId, editingImageNames),
+            enhance: enhanceEditorMarkdown,
+            imageLibrary: momentImageLibrary,
+            imageUploader: momentImageUploader,
+            mediaMarkup: (url, type) => `MEDIA::${type}::${url}`,
+            mentions: async (query) => {
+                const rows = await api(`/api/mentions/search?q=${encodeURIComponent(query)}`);
+                return (rows || []).map((row) => ({ label: `${row.nickname || row.unique_id} · ${row.unique_id}`, value: row.unique_id }));
+            },
+            config: editorConfig,
+            previewImage: openImageViewer,
+            onChange: saveMomentDraft,
+            onSaveDraft: () => { saveMomentDraft(); if (!editingId) $("moment-form-error").textContent = t("草稿已保存"); },
+            locale: language === "en" ? "en" : "zh",
+            placeholder: t("分享你的想法"),
+            maxLength: 1024
+        });
+        return momentEditor;
     });
+    void editorReady.catch(() => {});
     for (const [value, [label]] of Object.entries(boards)) { const option = element("option", "", t(label)); option.value = value; option.dataset.t = label; $("moment-board").append(option); }
     $("moment-locate").onclick = async () => {
         try { const result = await api("/api/moment-location"); $("moment-location").value = t(result.region); }
@@ -1050,7 +1074,7 @@
         try {
             site = await api("/api/site");
             momentConfig = (await api("/api/moment-config").catch(() => null)) || momentConfig;
-            momentEditor.setOptions({ config: editorConfig });
+            momentEditor?.setOptions({ config: editorConfig });
             void loadCommunityRegion();
             $("support").hidden = !site.support_key;
             if (site.support_key)
@@ -1083,4 +1107,5 @@
             $("support").hidden = true;
         }
     })();
+    $("site-startup")?.remove();
 })();
