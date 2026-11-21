@@ -97,23 +97,17 @@ local 向前端传入 `DAWN_HTTP_TARGET`、`DAWN_WS_TARGET`、`DAWN_WS_PATH`、`
 
 ## 生产部署
 
-在构建机器的项目根目录运行 `./deploy.sh root@server /srv/dawn-simple`。脚本构建 Linux 程序、后台和文档，通过 SSH 上传产物。目标服务器需要 Bash、rsync、flock、Python 及 venv，以及可用的项目 `.env`。默认按 Linux amd64 构建，应用以 `www` 运行，可通过 `DEPLOY_ARCH` 和 `DEPLOY_USER` 调整。
-
-部署依次执行安装、完整数据库结构同步和服务更新。脚本安装并启动本地向量服务，模型就绪后同步 Dawn 与 PrismGo 的中文文档，再通过 `app:support-docs --index` 重建官网客服索引。
-
-在项目根目录构建：
+登录生产服务器，在项目仓库中更新源码并执行发布脚本：
 
 ```sh
-mkdir -p bin storage/logs
-git submodule update --init --recursive
-pnpm --dir docs install --frozen-lockfile
-pnpm --dir docs build:site
-pnpm --dir admin install --frozen-lockfile
-pnpm --dir admin build
-go build -o bin/dawn-simple .
-./bin/dawn-simple dawn:install --force
-./bin/dawn-simple dawn:start all
+cd /srv/dawn-simple
+git pull --ff-only
+./deploy.sh
 ```
+
+服务器需要 Bash、Git、Go 1.26 或更高版本、Node.js 22.12 或更高版本、pnpm、rsync、flock、runuser、Python 及 venv。以 root 执行，应用默认以 `www` 运行，可通过 `DEPLOY_USER` 调整。脚本使用已检出的提交，在临时工作区构建当前服务器架构的程序、后台和文档，构建完毕后更新服务。
+
+部署先执行安装和完整数据库结构同步。有运行中的服务管理器时，平滑重载 HTTP/WS，重启 cron 和 Horizon。应用就绪后安装并启动本地向量服务，等模型就绪后通过 `app:support-docs --index` 同步 Dawn 与 PrismGo 中文文档并重建官网客服索引。
 
 部署保留与二进制同版的 `database/migrations`、`database/seeders` 源码，由一个实例执行安装。设置生产环境变量，配置数据库、Redis 与 `APP_KEY`；多个实例共享连接、应用密钥和文件存储。
 

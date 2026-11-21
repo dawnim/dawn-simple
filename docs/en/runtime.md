@@ -97,23 +97,17 @@ Use `DAWN_FRONTEND_DIRECTORY` and `DAWN_FRONTEND_PORT` to change directory and p
 
 ## Production deployment
 
-Run `./deploy.sh root@server /srv/dawn-simple` from the project root on the build machine. The script builds the Linux binary, admin app, and documentation, then uploads them over SSH. The target server needs Bash, rsync, flock, Python with venv, and a configured project `.env`. The defaults are Linux amd64 and the `www` service account. Set `DEPLOY_ARCH` or `DEPLOY_USER` to override them.
-
-Deployment runs installation and full database schema sync before updating the services. The script installs and starts the local embedding service. Once the model is ready, `app:support-docs --index` publishes the Chinese Dawn and PrismGo docs and rebuilds the website support index.
-
-Build from the project root:
+Log in to the production server, update the checkout, and run the release script:
 
 ```sh
-mkdir -p bin storage/logs
-git submodule update --init --recursive
-pnpm --dir docs install --frozen-lockfile
-pnpm --dir docs build:site
-pnpm --dir admin install --frozen-lockfile
-pnpm --dir admin build
-go build -o bin/dawn-simple .
-./bin/dawn-simple dawn:install --force
-./bin/dawn-simple dawn:start all
+cd /srv/dawn-simple
+git pull --ff-only
+./deploy.sh
 ```
+
+The server needs Bash, Git, Go 1.26 or later, Node.js 22.12 or later, pnpm, rsync, flock, runuser, and Python with venv. Run as root. The application runs as `www` by default, configurable with `DEPLOY_USER`. The script builds the checked-out commit in a temporary worktree for the server's architecture, then publishes the binary, admin app, and documentation.
+
+Deployment runs installation and full database schema sync first. If a service manager is running, it gracefully reloads HTTP and WS and restarts cron and Horizon. After the application is ready, the script installs and starts the local embedding service. Once the model is ready, `app:support-docs --index` syncs the Chinese Dawn and PrismGo docs and rebuilds the website support index.
 
 Keep `database/migrations` and `database/seeders` sources matching the binary. Run installation from one instance. Set production SQL, Redis, and `APP_KEY`; instances share connections, the application key, and file storage.
 
