@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@dawnim/admin':
-        specifier: 0.1.7
-        version: 0.1.7(@types/sortablejs@1.15.9)(element-plus@2.14.7(vue@3.5.41(typescript@5.6.3)))(pinia@3.0.4(typescript@5.6.3)(vue@3.5.41(typescript@5.6.3)))(vite@7.3.7(jiti@2.7.0)(lightningcss@1.33.0))(vue-i18n@9.14.5(vue@3.5.41(typescript@5.6.3)))(vue-router@4.6.4(vue@3.5.41(typescript@5.6.3)))(vue@3.5.41(typescript@5.6.3))
+        specifier: 0.1.9
+        version: 0.1.9(@types/sortablejs@1.15.9)(element-plus@2.14.7(vue@3.5.41(typescript@5.6.3)))(pinia@3.0.4(typescript@5.6.3)(vue@3.5.41(typescript@5.6.3)))(vite@7.3.7(jiti@2.7.0)(lightningcss@1.33.0))(vue-i18n@9.14.5(vue@3.5.41(typescript@5.6.3)))(vue-router@4.6.4(vue@3.5.41(typescript@5.6.3)))(vue@3.5.41(typescript@5.6.3))
       element-plus:
         specifier: ^2.11.2
         version: 2.14.7(vue@3.5.41(typescript@5.6.3))
@@ -159,8 +159,8 @@ packages:
     resolution: {integrity: sha512-9rQHijqB2Rq6qOEC/xHaA6aPlsKGi5kmCQW50O1asn9g63XFeD5NmBwysriistW5Xx0JPafyD/TA7yk2S3pXGQ==}
     engines: {node: '>=14'}
 
-  '@dawnim/admin@0.1.7':
-    resolution: {integrity: sha512-r/72zpcs0ARKTxzEl4pmTxG5kujMw08NluRq/zMTdk3mn+rT6C3YEniZRE+SrOSa8rzBY1dxI7WvaaFLcsMuyQ==}
+  '@dawnim/admin@0.1.9':
+    resolution: {integrity: sha512-oyLV4zs1m2mln4ly8Ed5Ar83cqofPpXU5roeCsoQoiDuWzXPhKgfTfK8Yi+VTXntpEe9kHmp7jFs1QPNleGRqw==}
     engines: {node: '>=20.19.0', pnpm: '>=10'}
     peerDependencies:
       element-plus: ^2.11.0
@@ -1620,7 +1620,7 @@ snapshots:
 
   '@ctrl/tinycolor@4.2.2': {}
 
-  '@dawnim/admin@0.1.7(@types/sortablejs@1.15.9)(element-plus@2.14.7(vue@3.5.41(typescript@5.6.3)))(pinia@3.0.4(typescript@5.6.3)(vue@3.5.41(typescript@5.6.3)))(vite@7.3.7(jiti@2.7.0)(lightningcss@1.33.0))(vue-i18n@9.14.5(vue@3.5.41(typescript@5.6.3)))(vue-router@4.6.4(vue@3.5.41(typescript@5.6.3)))(vue@3.5.41(typescript@5.6.3))':
+  '@dawnim/admin@0.1.9(@types/sortablejs@1.15.9)(element-plus@2.14.7(vue@3.5.41(typescript@5.6.3)))(pinia@3.0.4(typescript@5.6.3)(vue@3.5.41(typescript@5.6.3)))(vite@7.3.7(jiti@2.7.0)(lightningcss@1.33.0))(vue-i18n@9.14.5(vue@3.5.41(typescript@5.6.3)))(vue-router@4.6.4(vue@3.5.41(typescript@5.6.3)))(vue@3.5.41(typescript@5.6.3))':
     dependencies:
       '@codemirror/language': 6.13.1
       '@codemirror/language-data': 6.5.2
