@@ -10,7 +10,7 @@ fi
 cd "$(dirname "$0")"
 app_user=${DEPLOY_USER:-www}
 export npm_config_registry=${npm_config_registry:-https://registry.npmjs.org/}
-for command in git go node pnpm python3 rsync flock runuser; do
+for command in git go node npm pnpm python3 rsync flock runuser; do
     if ! command -v "$command" >/dev/null; then
         printf '缺少部署依赖 %s\n' "$command" >&2
         exit 1
@@ -36,6 +36,7 @@ git worktree add --detach "$source_dir" "$revision"
 git -C "$source_dir" submodule update --init --recursive
 test -f "$source_dir/docs/prismgo/zh_CN/installation.md"
 
+npm --prefix "$source_dir/tools" ci
 (
     cd "$source_dir/admin"
     pnpm install --frozen-lockfile

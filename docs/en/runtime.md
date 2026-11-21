@@ -105,7 +105,7 @@ git pull --ff-only
 ./deploy.sh
 ```
 
-The server needs Bash, Git, Go 1.26 or later, Node.js 22.12 or later, pnpm, rsync, flock, runuser, and Python with venv. Run as root. The application runs as `www` by default, configurable with `DEPLOY_USER`. The script builds the checked-out commit in a temporary worktree for the server's architecture, then publishes the binary, admin app, and documentation.
+The server needs Bash, Git, Go 1.26 or later, Node.js 22.12 or later, npm, pnpm, rsync, flock, runuser, and Python with venv. Run as root. The application runs as `www` by default, configurable with `DEPLOY_USER`. The script builds the checked-out commit in a temporary worktree for the server's architecture, then publishes the binary, admin app, and documentation.
 
 Deployment runs installation and full database schema sync first. If a service manager is running, it gracefully reloads HTTP and WS and restarts cron and Horizon. After the application is ready, the script installs and starts the local embedding service. Once the model is ready, `app:support-docs --index` syncs the Chinese Dawn and PrismGo docs and rebuilds the website support index.
 

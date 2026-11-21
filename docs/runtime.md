@@ -105,7 +105,7 @@ git pull --ff-only
 ./deploy.sh
 ```
 
-服务器需要 Bash、Git、Go 1.26 或更高版本、Node.js 22.12 或更高版本、pnpm、rsync、flock、runuser、Python 及 venv。以 root 执行，应用默认以 `www` 运行，可通过 `DEPLOY_USER` 调整。脚本使用已检出的提交，在临时工作区构建当前服务器架构的程序、后台和文档，构建完毕后更新服务。
+服务器需要 Bash、Git、Go 1.26 或更高版本、Node.js 22.12 或更高版本、npm、pnpm、rsync、flock、runuser、Python 及 venv。以 root 执行，应用默认以 `www` 运行，可通过 `DEPLOY_USER` 调整。脚本使用已检出的提交，在临时工作区构建当前服务器架构的程序、后台和文档，构建完毕后更新服务。
 
 部署先执行安装和完整数据库结构同步。有运行中的服务管理器时，平滑重载 HTTP/WS，重启 cron 和 Horizon。应用就绪后安装并启动本地向量服务，等模型就绪后通过 `app:support-docs --index` 同步 Dawn 与 PrismGo 中文文档并重建官网客服索引。
 
