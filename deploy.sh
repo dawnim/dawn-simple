@@ -9,6 +9,7 @@ fi
 
 cd "$(dirname "$0")"
 app_user=${DEPLOY_USER:-www}
+export npm_config_registry=${npm_config_registry:-https://registry.npmjs.org/}
 for command in git go node pnpm python3 rsync flock runuser; do
     if ! command -v "$command" >/dev/null; then
         printf '缺少部署依赖 %s\n' "$command" >&2
